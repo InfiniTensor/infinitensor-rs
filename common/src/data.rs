@@ -6,6 +6,11 @@ pub struct Data {
 }
 
 impl Data {
+    #[inline]
+    pub const fn empty() -> Self {
+        Self { cpu: Vec::new() }
+    }
+
     pub fn cpu<T: AsDataType>(mut data: Vec<T>) -> Self {
         let len = Layout::array::<T>(data.len()).unwrap();
         let cap = Layout::array::<T>(data.capacity()).unwrap();

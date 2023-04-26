@@ -1,6 +1,7 @@
 ﻿use common::{AsDataType, Data, DataType};
 use std::{
     collections::HashMap,
+    fmt,
     sync::{Arc, Mutex},
 };
 
@@ -50,7 +51,7 @@ impl Tensor {
     }
 
     #[inline]
-    pub fn shape(&self) -> &Vec<usize> {
+    pub fn shape(&self) -> &[usize] {
         &self.shape
     }
 
@@ -62,5 +63,56 @@ impl Tensor {
     #[inline]
     pub fn size(&self) -> usize {
         self.count() * self.data_type.size()
+    }
+}
+
+impl fmt::Display for Tensor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{:?}<{}>{{{}}}",
+            self.data_type,
+            self.shape
+                .iter()
+                .map(usize::to_string)
+                .collect::<Vec<_>>()
+                .join("x"),
+            match self.data_type {
+                DataType::UNDEFINED => unreachable!(),
+                DataType::FLOAT => data_to_string::<f32>(&self.data),
+                DataType::UINT8 => data_to_string::<u8>(&self.data),
+                DataType::INT8 => data_to_string::<i8>(&self.data),
+                DataType::UINT16 => data_to_string::<u16>(&self.data),
+                DataType::INT16 => data_to_string::<i16>(&self.data),
+                DataType::INT32 => data_to_string::<i32>(&self.data),
+                DataType::INT64 => data_to_string::<i64>(&self.data),
+                DataType::STRING => data_to_string::<char>(&self.data),
+                DataType::BOOL => data_to_string::<bool>(&self.data),
+                DataType::DOUBLE => data_to_string::<f64>(&self.data),
+                DataType::FLOAT16 => todo!(),
+                DataType::UINT32 => data_to_string::<u32>(&self.data),
+                DataType::UINT64 => data_to_string::<u64>(&self.data),
+            },
+        )
+    }
+}
+
+#[inline]
+fn data_to_string<T: ToString>(data: &Data) -> String {
+    let slice = data.as_slice::<T>();
+    if slice.len() > 12 {
+        let mut ans = slice[..6]
+            .iter()
+            .map(T::to_string)
+            .collect::<Vec<_>>()
+            .join(", ");
+        ans.extend(", ...".chars());
+        ans
+    } else {
+        slice
+            .iter()
+            .map(T::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 }

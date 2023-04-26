@@ -1,8 +1,12 @@
 ﻿use crate::{Tensor, TensorPos};
 use common::OpType;
-use std::sync::{
-    atomic::{AtomicUsize, Ordering::AcqRel},
-    Arc,
+use std::{
+    collections::BTreeMap,
+    fmt,
+    sync::{
+        atomic::{AtomicUsize, Ordering::AcqRel},
+        Arc,
+    },
 };
 
 pub struct Operator {
@@ -82,5 +86,56 @@ impl Drop for Unigraph {
                 output.source.lock().unwrap().remove(&self.id);
             }
         }
+    }
+}
+
+impl fmt::Display for Unigraph {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let title = format!("Unigraph {}", self.id);
+        writeln!(
+            f,
+            "\
++-{0}-+
+| {1} |
++-{0}-+
+        ",
+            "-".repeat(title.len()),
+            title,
+        )?;
+
+        let mut id = 0;
+        let mut tensors = BTreeMap::new();
+        for op in &self.ops {
+            use std::collections::btree_map::Entry::*;
+
+            let origin = id;
+            for t in op.inputs.iter().chain(&op.outputs) {
+                if let Vacant(entry) = tensors.entry(Arc::as_ptr(t)) {
+                    writeln!(f, "_{} = {t}", id)?;
+                    entry.insert(id);
+                    id += 1;
+                }
+            }
+            if id != origin {
+                writeln!(f)?;
+            }
+            writeln!(
+                f,
+                "({}) = {:?}({})",
+                op.outputs
+                    .iter()
+                    .map(|t| format!("_{}", tensors[&Arc::as_ptr(t)]))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+                op.op_type,
+                op.inputs
+                    .iter()
+                    .map(|t| format!("_{}", tensors[&Arc::as_ptr(t)]))
+                    .collect::<Vec<_>>()
+                    .join(", "),
+            )?;
+        }
+
+        Ok(())
     }
 }
