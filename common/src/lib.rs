@@ -1,4 +1,7 @@
+#![deny(warnings)]
+
 mod data;
+#[macro_use]
 mod data_type;
 mod op_type;
 

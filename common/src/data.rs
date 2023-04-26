@@ -20,6 +20,11 @@ impl Data {
     }
 
     #[inline]
+    pub fn data(&self) -> &[u8] {
+        &self.cpu
+    }
+
+    #[inline]
     pub fn as_slice<T: AsDataType>(&self) -> &[T] {
         let ptr = self.cpu.as_ptr() as *const T;
         let len = self.cpu.len() / core::mem::size_of::<T>();

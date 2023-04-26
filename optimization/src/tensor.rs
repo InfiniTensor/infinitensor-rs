@@ -1,10 +1,11 @@
-﻿use common::{AsDataType, Data, DataType};
+﻿use common::{invoke_ty, AsDataType, Data, DataType};
 use std::{
     collections::HashMap,
     fmt,
     sync::{Arc, Mutex},
 };
 
+#[allow(unused)]
 pub struct TensorPos {
     pub(crate) op: usize,
     pub(crate) idx: usize,
@@ -77,36 +78,20 @@ impl fmt::Display for Tensor {
                 .map(usize::to_string)
                 .collect::<Vec<_>>()
                 .join("x"),
-            match self.data_type {
-                DataType::UNDEFINED => unreachable!(),
-                DataType::FLOAT => data_to_string::<f32>(&self.data),
-                DataType::UINT8 => data_to_string::<u8>(&self.data),
-                DataType::INT8 => data_to_string::<i8>(&self.data),
-                DataType::UINT16 => data_to_string::<u16>(&self.data),
-                DataType::INT16 => data_to_string::<i16>(&self.data),
-                DataType::INT32 => data_to_string::<i32>(&self.data),
-                DataType::INT64 => data_to_string::<i64>(&self.data),
-                DataType::STRING => todo!(),
-                DataType::BOOL => data_to_string::<bool>(&self.data),
-                DataType::DOUBLE => data_to_string::<f64>(&self.data),
-                DataType::FLOAT16 => todo!(),
-                DataType::UINT32 => data_to_string::<u32>(&self.data),
-                DataType::UINT64 => data_to_string::<u64>(&self.data),
-            },
+            invoke_ty!(self.data_type, self.data.data(), data_to_string),
         )
     }
 }
 
 #[inline]
-fn data_to_string<T: AsDataType + ToString>(data: &Data) -> String {
-    let slice = data.as_slice::<T>();
+fn data_to_string<T: ToString>(slice: &[T]) -> String {
     if slice.len() > 12 {
-        let mut ans = slice[..6]
-            .iter()
-            .map(T::to_string)
-            .collect::<Vec<_>>()
-            .join(", ");
-        ans.extend(", ...".chars());
+        let mut ans = String::new();
+        for x in &slice[..6] {
+            ans.push_str(x.to_string().as_str());
+            ans.push_str(", ");
+        }
+        ans.push_str("...");
         ans
     } else {
         slice

@@ -25,7 +25,7 @@ where
         ans.push((d - k + 1.into()) / strides[i].clone());
     }
 
-    return ans;
+    ans
 }
 
 #[test]

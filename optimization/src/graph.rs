@@ -20,6 +20,13 @@ pub struct Unigraph {
     pub(crate) ops: Vec<Operator>,
 }
 
+impl Default for Unigraph {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Unigraph {
     #[inline]
     pub fn new() -> Self {

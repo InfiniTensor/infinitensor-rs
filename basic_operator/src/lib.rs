@@ -1,3 +1,5 @@
+#![deny(warnings)]
+
 mod op_type;
 
 pub mod infer;

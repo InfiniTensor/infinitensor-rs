@@ -8,7 +8,7 @@ use common::Data;
 pub struct SingleOp;
 
 pub fn partition(mut g: Unigraph) -> Vec<(Unigraph, SingleOp)> {
-    core::mem::replace(&mut g.ops, Vec::new())
+    core::mem::take(&mut g.ops)
         .into_iter()
         .map(|op| {
             let mut g = Unigraph::new();
@@ -20,68 +20,65 @@ pub fn partition(mut g: Unigraph) -> Vec<(Unigraph, SingleOp)> {
 
 pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
     let mut ans = Vec::new();
-    match g.ops.first().unwrap().op_type {
-        OpType::Conv => {
-            let conv = Conv::new(g.ops.first().unwrap());
-            let [n,c,h,w] = *conv.input().shape() else {
-                unreachable!()
-            };
-            let [f,c_,r,s] = *conv.kernel().shape() else {
-                unreachable!()
-            };
-            let dilations = conv.dilations().data().as_slice::<i32>();
-            let strides = conv.strides().data().as_slice::<i32>();
-            debug_assert_eq!(conv.input().data_type(), conv.kernel().data_type());
-            let dt = conv.input().data_type();
+    if let OpType::Conv = g.ops.first().unwrap().op_type {
+        let conv = Conv::new(g.ops.first().unwrap());
+        let [n,c,h,w] = *conv.input().shape() else {
+            unreachable!()
+        };
+        let [f,c_,r,s] = *conv.kernel().shape() else {
+            unreachable!()
+        };
+        let dilations = conv.dilations().data().as_slice::<i32>();
+        let strides = conv.strides().data().as_slice::<i32>();
+        debug_assert_eq!(conv.input().data_type(), conv.kernel().data_type());
+        let dt = conv.input().data_type();
 
-            if c != c_ || strides.iter().any(|x| *x != 1) {
-                // nothing to do
-            } else if r == 1 && s == 1 {
-                let mut mutant = Unigraph::new();
+        if c != c_ || strides.iter().any(|x| *x != 1) {
+            // nothing to do
+        } else if r == 1 && s == 1 {
+            let mut mutant = Unigraph::new();
 
-                // (input, "nchw"->"nhwc") -|transpose|-> tranposed -|reshape|-> t0
-                let (tranposed, permutation) = transpose(&conv.input(), "nchw", "nhwc");
-                mutant.push_op(
-                    OpType::Transpose,
-                    vec![conv.input().clone(), permutation],
-                    vec![tranposed.clone()],
-                );
-                let t0 = Tensor::share(vec![n * h * w, c], dt, Data::empty());
-                mutant.push_op(OpType::Reshape, vec![tranposed], vec![t0.clone()]);
+            // (input, "nchw"->"nhwc") -|transpose|-> tranposed -|reshape|-> t0
+            let (tranposed, permutation) = transpose(conv.input(), "nchw", "nhwc");
+            mutant.push_op(
+                OpType::Transpose,
+                vec![conv.input().clone(), permutation],
+                vec![tranposed.clone()],
+            );
+            let t0 = Tensor::share(vec![n * h * w, c], dt, Data::empty());
+            mutant.push_op(OpType::Reshape, vec![tranposed], vec![t0.clone()]);
 
-                // (kernel, "fcrs"->"cfrs") -|transpose|-> tranposed -|reshape|-> t1
-                let (tranposed, permutation) = transpose(&conv.kernel(), "fcrs", "cfrs");
-                mutant.push_op(
-                    OpType::Transpose,
-                    vec![conv.kernel().clone(), permutation],
-                    vec![tranposed.clone()],
-                );
-                let t1 = Tensor::share(vec![c, f], dt, Data::empty());
-                mutant.push_op(OpType::Reshape, vec![tranposed], vec![t1.clone()]);
+            // (kernel, "fcrs"->"cfrs") -|transpose|-> tranposed -|reshape|-> t1
+            let (tranposed, permutation) = transpose(conv.kernel(), "fcrs", "cfrs");
+            mutant.push_op(
+                OpType::Transpose,
+                vec![conv.kernel().clone(), permutation],
+                vec![tranposed.clone()],
+            );
+            let t1 = Tensor::share(vec![c, f], dt, Data::empty());
+            mutant.push_op(OpType::Reshape, vec![tranposed], vec![t1.clone()]);
 
-                // (t0, t1) -|matmul|-> x -|reshape|-> t2
-                let x = Tensor::share(infer::matmul(t0.shape(), t1.shape()), dt, Data::empty());
-                mutant.push_op(OpType::MatMul, vec![t0, t1], vec![x.clone()]);
-                let t2 = Tensor::share(vec![n, h, w, f], dt, Data::empty());
-                mutant.push_op(OpType::Reshape, vec![x], vec![t2.clone()]);
+            // (t0, t1) -|matmul|-> x -|reshape|-> t2
+            let x = Tensor::share(infer::matmul(t0.shape(), t1.shape()), dt, Data::empty());
+            mutant.push_op(OpType::MatMul, vec![t0, t1], vec![x.clone()]);
+            let t2 = Tensor::share(vec![n, h, w, f], dt, Data::empty());
+            mutant.push_op(OpType::Reshape, vec![x], vec![t2.clone()]);
 
-                // (t2, "nhwf"->"nfhw") -|transpose|-> output
-                let (tranposed, permutation) = transpose(&t2, "nhwf", "nfhw");
-                assert_eq!(tranposed.shape(), conv.output().shape());
-                mutant.push_op(
-                    OpType::Transpose,
-                    vec![t2, permutation],
-                    vec![conv.output().clone()],
-                );
+            // (t2, "nhwf"->"nfhw") -|transpose|-> output
+            let (tranposed, permutation) = transpose(&t2, "nhwf", "nfhw");
+            assert_eq!(tranposed.shape(), conv.output().shape());
+            mutant.push_op(
+                OpType::Transpose,
+                vec![t2, permutation],
+                vec![conv.output().clone()],
+            );
 
-                ans.push(mutant);
-            } else if dilations.iter().any(|x| *x > 1) {
-                let mut g = Unigraph::new();
+            ans.push(mutant);
+        } else if dilations.iter().any(|x| *x > 1) {
+            // let mut g = Unigraph::new();
 
-                ans.push(g);
-            }
+            // ans.push(g);
         }
-        _ => {}
     };
     ans
 }

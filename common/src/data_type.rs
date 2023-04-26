@@ -111,3 +111,80 @@ impl AsDataType for u64 {
         DataType::UINT64
     }
 }
+
+#[macro_export]
+macro_rules! invoke_ty {
+    ($data_type:expr, $slice:expr, $func:ident) => {
+        match ($data_type) {
+            DataType::UNDEFINED => unreachable!(),
+            DataType::FLOAT => $func::<f32>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const f32,
+                    $slice.len() / core::mem::size_of::<f32>(),
+                )
+            }),
+            DataType::UINT8 => $func::<u8>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const u8,
+                    $slice.len() / core::mem::size_of::<u8>(),
+                )
+            }),
+            DataType::INT8 => $func::<i8>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const i8,
+                    $slice.len() / core::mem::size_of::<i8>(),
+                )
+            }),
+            DataType::UINT16 => $func::<u16>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const u16,
+                    $slice.len() / core::mem::size_of::<u16>(),
+                )
+            }),
+            DataType::INT16 => $func::<i16>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const i16,
+                    $slice.len() / core::mem::size_of::<i16>(),
+                )
+            }),
+            DataType::INT32 => $func::<i32>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const i32,
+                    $slice.len() / core::mem::size_of::<i32>(),
+                )
+            }),
+            DataType::INT64 => $func::<i64>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const i64,
+                    $slice.len() / core::mem::size_of::<i64>(),
+                )
+            }),
+            DataType::STRING => todo!(),
+            DataType::BOOL => $func::<bool>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const bool,
+                    $slice.len() / core::mem::size_of::<bool>(),
+                )
+            }),
+            DataType::FLOAT16 => todo!(),
+            DataType::DOUBLE => $func::<f64>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const f64,
+                    $slice.len() / core::mem::size_of::<f64>(),
+                )
+            }),
+            DataType::UINT32 => $func::<u32>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const u32,
+                    $slice.len() / core::mem::size_of::<u32>(),
+                )
+            }),
+            DataType::UINT64 => $func::<u64>(unsafe {
+                core::slice::from_raw_parts(
+                    $slice.as_ptr() as *const u64,
+                    $slice.len() / core::mem::size_of::<u64>(),
+                )
+            }),
+        }
+    };
+}
