@@ -1,4 +1,5 @@
 ﻿use crate::Unigraph;
+use std::fmt;
 
 pub struct Mutant {
     graph: Unigraph,
@@ -106,4 +107,63 @@ impl<T> Rating<T> {
 #[inline]
 fn list_size<T>(list: &[SubGraph<T>]) -> Vec<usize> {
     list.iter().map(|sub| sub.mutants.len()).collect()
+}
+
+impl<T: fmt::Debug> fmt::Display for SubGraph<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, m) in self.mutants.iter().enumerate() {
+            writeln!(
+                f,
+                "Mutant {i} ({:?}) | Score={} | {}",
+                self.partition_type, m.score, m.graph
+            )?;
+        }
+        Ok(())
+    }
+}
+
+impl<T: fmt::Debug> fmt::Display for Partition<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, sub) in self.0.iter().enumerate() {
+            writeln!(
+                f,
+                "\
+Part {i} {{
+
+{sub}
+}} // Part {i}"
+            )?;
+        }
+        Ok(())
+    }
+}
+impl<T: fmt::Debug> fmt::Display for Mutation<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, sub) in self.0.iter().enumerate() {
+            writeln!(
+                f,
+                "\
+Part {i} {{
+
+{sub}
+}} // Part {i}"
+            )?;
+        }
+        Ok(())
+    }
+}
+impl<T: fmt::Debug> fmt::Display for Rating<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, sub) in self.0.iter().enumerate() {
+            writeln!(
+                f,
+                "\
+Part {i} {{
+
+{sub}
+}} // Part {i}"
+            )?;
+        }
+        Ok(())
+    }
 }

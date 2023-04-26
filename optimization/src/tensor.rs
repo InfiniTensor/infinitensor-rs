@@ -86,7 +86,7 @@ impl fmt::Display for Tensor {
                 DataType::INT16 => data_to_string::<i16>(&self.data),
                 DataType::INT32 => data_to_string::<i32>(&self.data),
                 DataType::INT64 => data_to_string::<i64>(&self.data),
-                DataType::STRING => data_to_string::<char>(&self.data),
+                DataType::STRING => todo!(),
                 DataType::BOOL => data_to_string::<bool>(&self.data),
                 DataType::DOUBLE => data_to_string::<f64>(&self.data),
                 DataType::FLOAT16 => todo!(),
@@ -98,7 +98,7 @@ impl fmt::Display for Tensor {
 }
 
 #[inline]
-fn data_to_string<T: ToString>(data: &Data) -> String {
+fn data_to_string<T: AsDataType + ToString>(data: &Data) -> String {
     let slice = data.as_slice::<T>();
     if slice.len() > 12 {
         let mut ans = slice[..6]

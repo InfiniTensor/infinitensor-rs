@@ -91,23 +91,15 @@ impl Drop for Unigraph {
 
 impl fmt::Display for Unigraph {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        let title = format!("Unigraph {}", self.id);
-        writeln!(
-            f,
-            "\
-+-{0}-+
-| {1} |
-+-{0}-+
-        ",
-            "-".repeat(title.len()),
-            title,
-        )?;
+        writeln!(f, "Unigraph {}", self.id)?;
+        writeln!(f, "------------------------")?;
 
         let mut id = 0;
         let mut tensors = BTreeMap::new();
         for op in &self.ops {
             use std::collections::btree_map::Entry::*;
 
+            writeln!(f)?;
             let origin = id;
             for t in op.inputs.iter().chain(&op.outputs) {
                 if let Vacant(entry) = tensors.entry(Arc::as_ptr(t)) {
