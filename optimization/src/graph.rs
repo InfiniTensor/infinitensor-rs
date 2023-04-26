@@ -1,5 +1,5 @@
 ﻿use crate::{Tensor, TensorPos};
-use common::OpType;
+use basic_operator::OpType;
 use std::{
     collections::BTreeMap,
     fmt,
@@ -13,11 +13,6 @@ pub struct Operator {
     pub(crate) op_type: OpType,
     pub(crate) inputs: Vec<Arc<Tensor>>,
     pub(crate) outputs: Vec<Arc<Tensor>>,
-}
-
-pub struct OpRef {
-    graph: usize,
-    op: usize,
 }
 
 pub struct Unigraph {
@@ -40,29 +35,26 @@ impl Unigraph {
         op_type: OpType,
         inputs: Vec<Arc<Tensor>>,
         outputs: Vec<Arc<Tensor>>,
-    ) -> OpRef {
+    ) -> &Operator {
         use std::collections::hash_map::Entry::*;
 
-        let ans = OpRef {
-            graph: self.id,
-            op: self.ops.len(),
-        };
+        let op = self.ops.len();
 
-        for (i, input) in inputs.iter().enumerate() {
-            match input.target.lock().unwrap().entry(ans.graph) {
+        for (idx, input) in inputs.iter().enumerate() {
+            match input.target.lock().unwrap().entry(self.id) {
                 Occupied(mut entry) => {
-                    entry.get_mut().push(TensorPos { op: ans.op, idx: i });
+                    entry.get_mut().push(TensorPos { op, idx });
                 }
                 Vacant(entry) => {
-                    entry.insert(vec![TensorPos { op: ans.op, idx: i }]);
+                    entry.insert(vec![TensorPos { op, idx }]);
                 }
             }
         }
-        for (i, output) in outputs.iter().enumerate() {
-            match output.source.lock().unwrap().entry(ans.graph) {
+        for (idx, output) in outputs.iter().enumerate() {
+            match output.source.lock().unwrap().entry(self.id) {
                 Occupied(_) => panic!("Tensor source exist"),
                 Vacant(entry) => {
-                    entry.insert(TensorPos { op: ans.op, idx: i });
+                    entry.insert(TensorPos { op, idx });
                 }
             }
         }
@@ -72,7 +64,8 @@ impl Unigraph {
             inputs,
             outputs,
         });
-        ans
+
+        self.ops.last().unwrap()
     }
 }
 

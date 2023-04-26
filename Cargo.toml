@@ -1,2 +1,2 @@
 [workspace]
-members = ["common", "optimization"]
+members = ["common", "basic_operator", "optimization"]
