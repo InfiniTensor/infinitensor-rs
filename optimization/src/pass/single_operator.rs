@@ -23,20 +23,16 @@ pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
     match g.ops.first().unwrap().op_type {
         OpType::Conv => {
             let conv = Conv::new(g.ops.first().unwrap());
-            let i_shape = conv.input().shape();
-            let k_shape = conv.kernel().shape();
+            let [n,c,h,w] = *conv.input().shape() else {
+                unreachable!()
+            };
+            let [f,c_,r,s] = *conv.kernel().shape() else {
+                unreachable!()
+            };
             let dilations = conv.dilations().data().as_slice::<i32>();
             let strides = conv.strides().data().as_slice::<i32>();
-            // assert(conv.input()->data_type == conv.kernel()->data_type);
+            debug_assert_eq!(conv.input().data_type(), conv.kernel().data_type());
             let dt = conv.input().data_type();
-            let n = i_shape[0];
-            let c = i_shape[1];
-            let h = i_shape[2];
-            let w = i_shape[3];
-            let f = k_shape[0];
-            let c_ = k_shape[1];
-            let r = k_shape[2];
-            let s = k_shape[3];
 
             if c != c_ || strides.iter().any(|x| *x != 1) {
                 // nothing to do
@@ -64,7 +60,7 @@ pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
                 mutant.push_op(OpType::Reshape, vec![tranposed], vec![t1.clone()]);
 
                 // (t0, t1) -|matmul|-> x -|reshape|-> t2
-                let x = Tensor::share(vec![t0.shape()[0], t1.shape()[1]], dt, Data::empty());
+                let x = Tensor::share(infer::matmul(t0.shape(), t1.shape()), dt, Data::empty());
                 mutant.push_op(OpType::MatMul, vec![t0, t1], vec![x.clone()]);
                 let t2 = Tensor::share(vec![n, h, w, f], dt, Data::empty());
                 mutant.push_op(OpType::Reshape, vec![x], vec![t2.clone()]);

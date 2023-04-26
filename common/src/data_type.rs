@@ -1,5 +1,5 @@
 ﻿#[repr(u8)]
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum DataType {
     UNDEFINED,
     FLOAT,

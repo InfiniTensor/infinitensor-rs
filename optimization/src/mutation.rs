@@ -91,7 +91,7 @@ impl<T> Rating<T> {
     }
 
     pub fn select(&self, indices: &[usize]) -> Unigraph {
-        // assert!(indices.len() == self.0.len());
+        debug_assert_eq!(indices.len(), self.0.len());
         let mut ans = Unigraph::new();
         self.0
             .iter()
