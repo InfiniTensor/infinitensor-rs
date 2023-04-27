@@ -4,8 +4,8 @@ pub enum OpType {
     Binary(Binary),
     Reduce(Reduce),
     Compair(Compair),
+    Pool(Pool),
     ArgMax,
-    AveragePool,
     BatchNormalization,
     Bernoulli,
     BlackmanWindow,
@@ -63,12 +63,8 @@ pub enum OpType {
     LogSoftmax,
     Loop,
     LpNormalization,
-    LpPool,
     MatMul,
     MatMulInteger,
-    MaxPool,
-    MaxRoiPool,
-    MaxUnpool,
     MeanVarianceNormalization,
     MelWeightMatrix,
     Mish,
@@ -208,4 +204,13 @@ pub enum Compair {
     GreaterOrEqual,
     Less,
     LessOrEqual,
+}
+
+#[derive(Clone, Copy, Debug)]
+pub enum Pool {
+    Average,
+    Lp,
+    Max,
+    MaxRoi,
+    MaxUn,
 }

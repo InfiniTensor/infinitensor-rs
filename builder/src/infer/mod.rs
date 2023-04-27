@@ -1,6 +1,7 @@
 ﻿mod binary;
 mod broadcast;
 mod compair;
+mod pool;
 mod reduce;
 mod reshape;
 mod unary;
@@ -30,8 +31,17 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
                 unsafe { inputs.get_unchecked(1) },
             )]
         }
+        OpType::Pool(_) => {
+            assert_eq!(inputs.len(), 5, "Pool operator must have 5 inputs");
+            vec![pool::infer(
+                unsafe { inputs.get_unchecked(0) },
+                unsafe { inputs.get_unchecked(1) },
+                unsafe { inputs.get_unchecked(2) },
+                unsafe { inputs.get_unchecked(3) },
+                unsafe { inputs.get_unchecked(4) },
+            )]
+        }
         OpType::ArgMax => todo!(),
-        OpType::AveragePool => todo!(),
         OpType::BatchNormalization => todo!(),
         OpType::Bernoulli => todo!(),
         OpType::BlackmanWindow => todo!(),
@@ -88,12 +98,8 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::LogSoftmax => todo!(),
         OpType::Loop => todo!(),
         OpType::LpNormalization => todo!(),
-        OpType::LpPool => todo!(),
         OpType::MatMul => todo!(),
         OpType::MatMulInteger => todo!(),
-        OpType::MaxPool => todo!(),
-        OpType::MaxRoiPool => todo!(),
-        OpType::MaxUnpool => todo!(),
         OpType::MeanVarianceNormalization => todo!(),
         OpType::MelWeightMatrix => todo!(),
         OpType::Mish => todo!(),
