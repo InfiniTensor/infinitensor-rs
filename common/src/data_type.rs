@@ -1,5 +1,5 @@
 ﻿#[repr(u8)]
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Debug)]
 pub enum DataType {
     UNDEFINED,
     FLOAT,
@@ -39,6 +39,43 @@ impl DataType {
             DataType::UINT32 => size_of::<u32>(),
             DataType::UINT64 => size_of::<u64>(),
         }
+    }
+
+    #[inline]
+    pub const fn is_numeric(&self) -> bool {
+        matches!(
+            self,
+            DataType::FLOAT
+                | DataType::UINT8
+                | DataType::INT8
+                | DataType::UINT16
+                | DataType::INT16
+                | DataType::INT32
+                | DataType::INT64
+                | DataType::BOOL
+                | DataType::FLOAT16
+                | DataType::DOUBLE
+                | DataType::UINT32
+                | DataType::UINT64
+        )
+    }
+
+    #[inline]
+    pub const fn is_float(&self) -> bool {
+        matches!(self, DataType::FLOAT | DataType::FLOAT16 | DataType::DOUBLE)
+    }
+
+    #[inline]
+    pub const fn is_bool(&self) -> bool {
+        matches!(self, DataType::BOOL)
+    }
+
+    #[inline]
+    pub const fn is_bits(&self) -> bool {
+        matches!(
+            self,
+            DataType::UINT8 | DataType::UINT16 | DataType::UINT32 | DataType::UINT64
+        )
     }
 }
 

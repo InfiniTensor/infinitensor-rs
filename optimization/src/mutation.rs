@@ -98,7 +98,7 @@ impl<T> Rating<T> {
             .zip(indices)
             .flat_map(|(sub, idx)| &sub.mutants[*idx].graph.ops)
             .for_each(|op| {
-                ans.push_op(op.op_type, op.inputs.clone(), op.outputs.clone());
+                ans.push_op(op.op_type.clone(), op.inputs.clone(), op.outputs.clone());
             });
         ans
     }
