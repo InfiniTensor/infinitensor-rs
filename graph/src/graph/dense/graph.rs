@@ -1,7 +1,11 @@
-﻿use crate::{infer, Tensor};
+﻿use super::{InletPos, OpIdx, Operator, Outlet, OutletPos};
+use crate::{
+    graph::{Graph, Operator as OpTrait},
+    infer, Tensor,
+};
 use basic_operator::OpType;
 use common::{AsDataType, Data, DataType};
-use std::{num::NonZeroUsize, sync::Arc};
+use std::sync::Arc;
 
 pub struct Unigraph {
     inputs: Vec<Outlet>,
@@ -95,7 +99,6 @@ impl Unigraph {
         outputs: Vec<Tensor>,
     ) -> Vec<OutletPos> {
         let op_idx = self.operators.len();
-        let outlet_len = outputs.len();
         for (slot, pos) in inputs.iter().enumerate() {
             self.get_outlet_mut(pos).targets.push(InletPos {
                 op_idx: OpIdx::new_unchecked(op_idx),
@@ -103,6 +106,7 @@ impl Unigraph {
             });
         }
         self.operators.push(Operator {
+            op_idx: OpIdx::new_unchecked(op_idx),
             op_type,
             inputs,
             outputs: outputs
@@ -113,61 +117,36 @@ impl Unigraph {
                 })
                 .collect(),
         });
-        (0..outlet_len)
-            .map(|slot| OutletPos {
-                op_idx: OpIdx::new_unchecked(op_idx),
-                slot,
-            })
-            .collect()
+        self.operators.last().unwrap().outputs()
     }
 
     fn get_outlet(&self, pos: &OutletPos) -> &Outlet {
-        if let Some(node) = pos.op_idx.0 {
-            &self.operators[node.get() - 1].outputs[pos.slot]
+        if let Some(i) = pos.op_idx.get() {
+            &self.operators[i].outputs[pos.slot]
         } else {
             &self.inputs[pos.slot]
         }
     }
 
     fn get_outlet_mut(&mut self, pos: &OutletPos) -> &mut Outlet {
-        if let Some(node) = pos.op_idx.0 {
-            &mut self.operators[node.get() - 1].outputs[pos.slot]
+        if let Some(i) = pos.op_idx.get() {
+            &mut self.operators[i - 1].outputs[pos.slot]
         } else {
             &mut self.inputs[pos.slot]
         }
     }
 }
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-#[repr(transparent)]
-struct OpIdx(Option<NonZeroUsize>);
+impl Graph for Unigraph {
+    type Op = Operator;
 
-impl OpIdx {
     #[inline]
-    pub const fn new_unchecked(idx: usize) -> Self {
-        Self(Some(unsafe { NonZeroUsize::new_unchecked(idx + 1) }))
+    fn ops(&self) -> &[Self::Op] {
+        &self.operators
     }
-}
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-struct InletPos {
-    op_idx: OpIdx,
-    slot: usize,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct OutletPos {
-    op_idx: OpIdx,
-    slot: usize,
-}
-
-struct Outlet {
-    targets: Vec<InletPos>,
-    tensor: Tensor,
-}
-
-struct Operator {
-    op_type: OpType,
-    inputs: Vec<OutletPos>,
-    outputs: Vec<Outlet>,
+    #[inline]
+    fn get_tensor(&self, pos: &<Self::Op as OpTrait>::TensorPos) -> &Tensor {
+        &self.get_outlet(pos).tensor
+    }
 }

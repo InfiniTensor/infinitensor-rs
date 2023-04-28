@@ -1,8 +1,8 @@
 mod graph;
 mod infer;
 
-use common::{AsDataType, Data, DataType};
-use std::sync::Arc;
+use common::{invoke_ty, AsDataType, Data, DataType};
+use std::{fmt, sync::Arc};
 
 pub use graph::{dense, linked};
 
@@ -55,5 +55,44 @@ impl Tensor {
     #[inline]
     pub fn data(&self) -> &Option<Arc<Data>> {
         &self.data
+    }
+}
+
+impl fmt::Display for Tensor {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(
+            f,
+            "{:?}<{}>{{{}}}",
+            self.dtype(),
+            self.shape
+                .iter()
+                .map(usize::to_string)
+                .collect::<Vec<_>>()
+                .join("x"),
+            if let Some(data) = self.data.as_ref() {
+                invoke_ty!(self.dtype(), data.as_slice(), data_to_string)
+            } else {
+                String::new()
+            }
+        )
+    }
+}
+
+#[inline]
+fn data_to_string<T: ToString>(slice: &[T]) -> String {
+    if slice.len() > 12 {
+        let mut ans = String::new();
+        for x in &slice[..6] {
+            ans.push_str(x.to_string().as_str());
+            ans.push_str(", ");
+        }
+        ans.push_str("...");
+        ans
+    } else {
+        slice
+            .iter()
+            .map(T::to_string)
+            .collect::<Vec<_>>()
+            .join(", ")
     }
 }
