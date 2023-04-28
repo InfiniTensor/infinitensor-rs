@@ -48,6 +48,16 @@ impl Tensor {
             data: None,
         }
     }
+
+    #[inline]
+    pub fn is_variable(&self) -> bool {
+        matches!(self.shape.as_slice(), &[1])
+    }
+
+    #[inline]
+    pub fn is_typed_variable<T: AsDataType>(&self) -> bool {
+        self.dtype == T::as_data_type() && matches!(self.shape.as_slice(), &[1])
+    }
 }
 
 struct Operator {

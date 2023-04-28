@@ -13,14 +13,10 @@ pub(super) fn infer(
     assert!(matches!(pads.dtype, DataType::INT64));
     assert!(matches!(strides.dtype, DataType::INT64));
 
-    let Some(kernel) = kernel.data.as_ref()
-    else { panic!("Shape must be const") };
-    let Some(dilations) = dilations.data.as_ref()
-    else { panic!("Shape must be const") };
-    let Some(pads) = pads.data.as_ref()
-    else { panic!("Shape must be const") };
-    let Some(strides) = strides.data.as_ref()
-    else { panic!("Shape must be const") };
+    let kernel = kernel.data.as_ref().expect("Kernel must be const");
+    let dilations = dilations.data.as_ref().expect("Dilations must be const");
+    let pads = pads.data.as_ref().expect("Pads must be const");
+    let strides = strides.data.as_ref().expect("Strides must be const");
 
     let shape = infer::pool(
         data.shape

@@ -1,6 +1,8 @@
 ﻿mod binary;
 mod broadcast;
 mod compair;
+mod gemm;
+mod matmul;
 mod pool;
 mod reduce;
 mod reshape;
@@ -11,41 +13,40 @@ use basic_operator::OpType;
 
 pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
     match op_type {
-        OpType::Unary(u) => {
-            assert_eq!(inputs.len(), 1, "Unary operator must have a single input");
-            vec![unary::infer(u, unsafe { inputs.get_unchecked(0) })]
-        }
-        OpType::Binary(b) => {
-            assert_eq!(inputs.len(), 2, "Binary operator must have two inputs");
-            vec![binary::infer(
-                b,
-                unsafe { inputs.get_unchecked(0) },
-                unsafe { inputs.get_unchecked(1) },
-            )]
-        }
+        OpType::Unary(u) => match inputs {
+            &[data] => vec![unary::infer(u, data)],
+            _ => panic!("Unary operator must have a single input"),
+        },
+        OpType::Binary(b) => match inputs {
+            &[x, y] => vec![binary::infer(b, x, y)],
+            _ => panic!("Binary operator must have two inputs"),
+        },
         OpType::Reduce(r) => vec![reduce::infer(r, inputs)],
-        OpType::Compair(_) => {
-            assert_eq!(inputs.len(), 2, "Compair operator must have two inputs");
-            vec![compair::infer(
-                unsafe { inputs.get_unchecked(0) }, // fmt
-                unsafe { inputs.get_unchecked(1) },
-            )]
-        }
-        OpType::Pool(_) => {
-            assert_eq!(inputs.len(), 5, "Pool operator must have 5 inputs");
-            vec![pool::infer(
-                unsafe { inputs.get_unchecked(0) },
-                unsafe { inputs.get_unchecked(1) },
-                unsafe { inputs.get_unchecked(2) },
-                unsafe { inputs.get_unchecked(3) },
-                unsafe { inputs.get_unchecked(4) },
-            )]
-        }
+        OpType::Compair(_) => match inputs {
+            &[x, y] => vec![compair::infer(x, y)],
+            _ => panic!("Compair operator must have two inputs"),
+        },
+        OpType::Pool(_) => match inputs {
+            &[data, kernel, dilations, pads, strides] => {
+                vec![pool::infer(data, kernel, dilations, pads, strides)]
+            }
+            _ => panic!("Pool operator must have 5 inputs"),
+        },
         OpType::ArgMax => todo!(),
         OpType::BatchNormalization => todo!(),
         OpType::Bernoulli => todo!(),
         OpType::BlackmanWindow => todo!(),
-        OpType::Cast => todo!(),
+        OpType::Cast => match inputs {
+            &[data, dtype] => {
+                assert!(dtype.shape.is_empty(), "Cast dtype must be empty");
+                vec![Tensor {
+                    shape: data.shape.clone(),
+                    dtype: dtype.dtype,
+                    data: data.data.clone(),
+                }]
+            }
+            _ => panic!("Cast operator must have two inputs"),
+        },
         OpType::CastLike => todo!(),
         OpType::Celu => todo!(),
         OpType::CenterCropPad => todo!(),
@@ -75,7 +76,12 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::Gather => todo!(),
         OpType::GatherElements => todo!(),
         OpType::GatherND => todo!(),
-        OpType::Gemm => todo!(),
+        OpType::Gemm => match inputs {
+            &[a, b, c, alpha, beta, trans_a, trans_b] => {
+                vec![gemm::infer(a, b, c, alpha, beta, trans_a, trans_b)]
+            }
+            _ => panic!("Gemm operator must have three inputs"),
+        },
         OpType::GlobalAveragePool => todo!(),
         OpType::GlobalLpPool => todo!(),
         OpType::GlobalMaxPool => todo!(),
@@ -98,7 +104,10 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::LogSoftmax => todo!(),
         OpType::Loop => todo!(),
         OpType::LpNormalization => todo!(),
-        OpType::MatMul => todo!(),
+        OpType::MatMul => match inputs {
+            &[a, b] => vec![matmul::infer(a, b)],
+            _ => panic!("MatMul operator must have two inputs"),
+        },
         OpType::MatMulInteger => todo!(),
         OpType::MeanVarianceNormalization => todo!(),
         OpType::MelWeightMatrix => todo!(),
@@ -133,13 +142,10 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::ReduceProd => todo!(),
         OpType::ReduceSum => todo!(),
         OpType::ReduceSumSquare => todo!(),
-        OpType::Reshape => {
-            assert_eq!(inputs.len(), 2, "Reshape operator must have two inputs");
-            vec![reshape::infer(
-                unsafe { inputs.get_unchecked(0) }, // data
-                unsafe { inputs.get_unchecked(1) }, // shape
-            )]
-        }
+        OpType::Reshape => match inputs {
+            &[data, shape] => vec![reshape::infer(data, shape)],
+            _ => panic!("Reshape operator must have two inputs"),
+        },
         OpType::Resize => todo!(),
         OpType::ReverseSequence => todo!(),
         OpType::RoiAlign => todo!(),
