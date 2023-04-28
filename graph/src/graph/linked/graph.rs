@@ -17,7 +17,7 @@ pub struct Operator {
 
 pub struct Unigraph {
     id: usize,
-    pub ops: Vec<Operator>,
+    ops: Vec<Operator>,
 }
 
 impl Default for Unigraph {
@@ -35,6 +35,28 @@ impl Unigraph {
             id: ID.fetch_add(1, AcqRel),
             ops: Default::default(),
         }
+    }
+
+    #[inline]
+    pub fn ops(&self) -> &[Operator] {
+        &self.ops
+    }
+
+    fn drop_inplace(&self) {
+        for op in &self.ops {
+            for input in &op.inputs {
+                input.target.lock().unwrap().remove(&self.id);
+            }
+            for output in &op.outputs {
+                output.source.lock().unwrap().remove(&self.id);
+            }
+        }
+    }
+
+    #[inline]
+    pub fn take_ops(mut self) -> Vec<Operator> {
+        self.drop_inplace();
+        core::mem::take(&mut self.ops)
     }
 
     pub fn push_op(
@@ -77,15 +99,9 @@ impl Unigraph {
 }
 
 impl Drop for Unigraph {
+    #[inline]
     fn drop(&mut self) {
-        for op in &self.ops {
-            for input in &op.inputs {
-                input.target.lock().unwrap().remove(&self.id);
-            }
-            for output in &op.outputs {
-                output.source.lock().unwrap().remove(&self.id);
-            }
-        }
+        self.drop_inplace();
     }
 }
 

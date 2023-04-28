@@ -94,7 +94,7 @@ impl<T> Rating<T> {
         self.0
             .iter()
             .zip(indices)
-            .flat_map(|(sub, idx)| &sub.mutants[*idx].graph.ops)
+            .flat_map(|(sub, idx)| sub.mutants[*idx].graph.ops())
             .for_each(|op| {
                 ans.push_op(op.op_type.clone(), op.inputs.clone(), op.outputs.clone());
             });

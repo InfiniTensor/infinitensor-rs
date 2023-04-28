@@ -6,8 +6,8 @@ use std::sync::Arc;
 #[derive(Debug)]
 pub struct SingleOp;
 
-pub fn partition(mut g: Unigraph) -> Vec<(Unigraph, SingleOp)> {
-    core::mem::take(&mut g.ops)
+pub fn partition(g: Unigraph) -> Vec<(Unigraph, SingleOp)> {
+    g.take_ops()
         .into_iter()
         .map(|op| {
             let mut g = Unigraph::new();
@@ -19,8 +19,9 @@ pub fn partition(mut g: Unigraph) -> Vec<(Unigraph, SingleOp)> {
 
 pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
     let mut ans = Vec::new();
-    if let OpType::Conv = g.ops.first().unwrap().op_type {
-        let conv = Conv::new(g.ops.first().unwrap());
+    let op = g.ops().first().unwrap();
+    if let OpType::Conv = op.op_type {
+        let conv = Conv::new(op);
         let [n,c,h,w] = *conv.input().shape() else {
             unreachable!()
         };
