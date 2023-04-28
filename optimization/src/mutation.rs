@@ -1,4 +1,4 @@
-﻿use crate::graph::Unigraph;
+﻿use graph::linked::Unigraph;
 use std::fmt;
 
 pub struct Mutant {
@@ -26,10 +26,10 @@ pub type PartitionFunc<T> = dyn Fn(Unigraph) -> Vec<(Unigraph, T)>;
 pub type MutationFunc<T> = dyn Fn(&Unigraph, &T) -> Vec<Unigraph>;
 pub type RatingFunc = dyn Fn(&Unigraph) -> f32;
 
-impl Unigraph {
-    pub fn partition<T>(self, f: &PartitionFunc<T>) -> Partition<T> {
+impl<T> Partition<T> {
+    pub fn new(g: Unigraph, f: &PartitionFunc<T>) -> Self {
         let mut ans = Partition::<T>(Default::default());
-        for (g, ty) in f(self) {
+        for (g, ty) in f(g) {
             ans.0.push(SubGraph {
                 mutants: vec![Mutant::new(g)],
                 partition_type: ty,
@@ -37,9 +37,7 @@ impl Unigraph {
         }
         ans
     }
-}
 
-impl<T> Partition<T> {
     #[inline]
     pub fn size(&self) -> Vec<usize> {
         list_size(&self.0)

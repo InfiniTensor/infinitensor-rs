@@ -4,7 +4,7 @@ mod infer;
 use common::{AsDataType, Data, DataType};
 use std::sync::Arc;
 
-pub use graph::dense;
+pub use graph::{dense, linked};
 
 #[derive(Clone)]
 pub struct Tensor {

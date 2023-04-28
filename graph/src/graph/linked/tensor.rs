@@ -1,4 +1,4 @@
-﻿use common::{invoke_ty, Data, DataType};
+﻿use common::{invoke_ty, AsDataType, Data, DataType};
 use std::{
     collections::HashMap,
     fmt,
@@ -37,6 +37,24 @@ impl LinkedTensor {
             source: Default::default(),
             target: Default::default(),
         })
+    }
+
+    #[inline]
+    pub fn share_value<T: AsDataType>(val: T) -> Arc<Self> {
+        Self::share(
+            vec![1],
+            T::as_data_type(),
+            Some(Arc::new(Data::cpu(vec![val]))),
+        )
+    }
+
+    #[inline]
+    pub fn share_vec<T: AsDataType>(vec: Vec<T>) -> Arc<Self> {
+        Self::share(
+            vec![vec.len()],
+            T::as_data_type(),
+            Some(Arc::new(Data::cpu(vec))),
+        )
     }
 }
 

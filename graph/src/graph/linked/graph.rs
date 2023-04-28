@@ -10,14 +10,14 @@ use std::{
 };
 
 pub struct Operator {
-    pub(crate) op_type: OpType,
-    pub(crate) inputs: Vec<Arc<LinkedTensor>>,
-    pub(crate) outputs: Vec<Arc<LinkedTensor>>,
+    pub op_type: OpType,
+    pub inputs: Vec<Arc<LinkedTensor>>,
+    pub outputs: Vec<Arc<LinkedTensor>>,
 }
 
 pub struct Unigraph {
     id: usize,
-    pub(crate) ops: Vec<Operator>,
+    pub ops: Vec<Operator>,
 }
 
 impl Default for Unigraph {

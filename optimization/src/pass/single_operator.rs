@@ -1,8 +1,7 @@
-﻿use std::sync::Arc;
-
-use crate::{graph::Unigraph, operator::Conv, Tensor};
+﻿use crate::operator::Conv;
 use basic_operator::{infer, OpType};
-use common::Data;
+use graph::linked::{LinkedTensor, Unigraph};
+use std::sync::Arc;
 
 #[derive(Debug)]
 pub struct SingleOp;
@@ -28,10 +27,20 @@ pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
         let [f,c_,r,s] = *conv.kernel().shape() else {
             unreachable!()
         };
-        let dilations = conv.dilations().data().as_typed_slice::<i32>();
-        let strides = conv.strides().data().as_typed_slice::<i32>();
-        debug_assert_eq!(conv.input().data_type(), conv.kernel().data_type());
-        let dt = conv.input().data_type();
+        let dilations = conv
+            .dilations()
+            .data()
+            .as_ref()
+            .unwrap()
+            .as_typed_slice::<i32>();
+        let strides = conv
+            .strides()
+            .data()
+            .as_ref()
+            .unwrap()
+            .as_typed_slice::<i32>();
+        debug_assert_eq!(conv.input().dtype(), conv.kernel().dtype());
+        let dt = conv.input().dtype();
 
         if c != c_ || strides.iter().any(|x| *x != 1) {
             // nothing to do
@@ -45,7 +54,7 @@ pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
                 vec![conv.input().clone(), permutation],
                 vec![tranposed.clone()],
             );
-            let t0 = Tensor::share(vec![n * h * w, c], dt, Data::empty());
+            let t0 = LinkedTensor::share(vec![n * h * w, c], dt, None);
             mutant.push_op(OpType::Reshape, vec![tranposed], vec![t0.clone()]);
 
             // (kernel, "fcrs"->"cfrs") -|transpose|-> tranposed -|reshape|-> t1
@@ -55,13 +64,13 @@ pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
                 vec![conv.kernel().clone(), permutation],
                 vec![tranposed.clone()],
             );
-            let t1 = Tensor::share(vec![c, f], dt, Data::empty());
+            let t1 = LinkedTensor::share(vec![c, f], dt, None);
             mutant.push_op(OpType::Reshape, vec![tranposed], vec![t1.clone()]);
 
             // (t0, t1) -|matmul|-> x -|reshape|-> t2
-            let x = Tensor::share(infer::matmul(t0.shape(), t1.shape()), dt, Data::empty());
+            let x = LinkedTensor::share(infer::matmul(t0.shape(), t1.shape()), dt, None);
             mutant.push_op(OpType::MatMul, vec![t0, t1], vec![x.clone()]);
-            let t2 = Tensor::share(vec![n, h, w, f], dt, Data::empty());
+            let t2 = LinkedTensor::share(vec![n, h, w, f], dt, None);
             mutant.push_op(OpType::Reshape, vec![x], vec![t2.clone()]);
 
             // (t2, "nhwf"->"nfhw") -|transpose|-> output
@@ -84,30 +93,31 @@ pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
 }
 
 #[inline]
-fn transpose(input: &Tensor, src: &str, tgt: &str) -> (Arc<Tensor>, Arc<Tensor>) {
+fn transpose(input: &LinkedTensor, src: &str, tgt: &str) -> (Arc<LinkedTensor>, Arc<LinkedTensor>) {
     let (shape, permute) = infer::transpose(input.shape(), src.as_bytes(), tgt.as_bytes());
     (
-        Tensor::share(shape, input.data_type(), Data::empty()),
-        Tensor::share_vec(permute),
+        LinkedTensor::share(shape, input.dtype(), None),
+        LinkedTensor::share_vec(permute),
     )
 }
 
 #[test]
 fn test_1x1_conv() {
+    use crate::mutation::Partition;
     use common::DataType;
 
     let mut g = Unigraph::new();
-    let input = Tensor::share(vec![1, 3, 8, 8], DataType::FLOAT, Data::empty());
-    let kernel = Tensor::share(vec![16, 3, 1, 1], DataType::FLOAT, Data::empty());
-    let output = Tensor::share(vec![1, 16, 8, 8], DataType::FLOAT, Data::empty());
+    let input = LinkedTensor::share(vec![1, 3, 8, 8], DataType::FLOAT, None);
+    let kernel = LinkedTensor::share(vec![16, 3, 1, 1], DataType::FLOAT, None);
+    let output = LinkedTensor::share(vec![1, 16, 8, 8], DataType::FLOAT, None);
     g.push_op(
         OpType::Conv,
         vec![
             input,
             kernel,
-            Tensor::share_vec(vec![1, 1]),
-            Tensor::share_vec(vec![0, 0]),
-            Tensor::share_vec(vec![1, 1]),
+            LinkedTensor::share_vec(vec![1, 1]),
+            LinkedTensor::share_vec(vec![0, 0]),
+            LinkedTensor::share_vec(vec![1, 1]),
         ],
         vec![output],
     );
@@ -115,7 +125,7 @@ fn test_1x1_conv() {
     println!("{g}");
     println!("=========================================================");
 
-    let partition = g.partition(&partition);
+    let partition = Partition::new(g, &partition);
     println!("{partition}");
     println!("=========================================================");
 
