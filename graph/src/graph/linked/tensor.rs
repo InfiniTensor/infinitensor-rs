@@ -15,7 +15,7 @@ pub struct TensorPos {
 }
 
 pub struct LinkedTensor {
-    tensor: Tensor,
+    pub(super) tensor: Tensor,
     pub(super) source: Mutex<HashMap<usize, TensorPos>>,
     pub(super) target: Mutex<HashMap<usize, Vec<TensorPos>>>,
 }

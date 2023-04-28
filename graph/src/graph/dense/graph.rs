@@ -5,7 +5,7 @@ use crate::{
 };
 use basic_operator::OpType;
 use common::{AsDataType, Data, DataType};
-use std::sync::Arc;
+use std::{fmt, sync::Arc};
 
 pub struct Unigraph {
     inputs: Vec<Outlet>,
@@ -137,6 +137,13 @@ impl Unigraph {
     }
 }
 
+impl fmt::Display for Unigraph {
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.fmt_impl(f)
+    }
+}
+
 impl Graph for Unigraph {
     type Op = Operator;
 
@@ -146,7 +153,7 @@ impl Graph for Unigraph {
     }
 
     #[inline]
-    fn get_tensor(&self, pos: &<Self::Op as OpTrait>::TensorPos) -> &Tensor {
-        &self.get_outlet(pos).tensor
+    fn get_tensor(&self, pos: &<Self::Op as OpTrait>::TensorPos) -> Tensor {
+        self.get_outlet(pos).tensor.clone()
     }
 }

@@ -1,19 +1,16 @@
-﻿use super::tensor::{LinkedTensor, TensorPos};
+﻿use super::{
+    super::Operator as OpTrait,
+    tensor::{LinkedTensor, TensorPos},
+};
+use crate::{graph::Graph, Tensor};
 use basic_operator::OpType;
 use std::{
-    collections::BTreeMap,
     fmt,
     sync::{
         atomic::{AtomicUsize, Ordering::AcqRel},
-        Arc,
+        Arc, Weak,
     },
 };
-
-pub struct Operator {
-    pub op_type: OpType,
-    pub inputs: Vec<Arc<LinkedTensor>>,
-    pub outputs: Vec<Arc<LinkedTensor>>,
-}
 
 pub struct Unigraph {
     id: usize,
@@ -106,44 +103,81 @@ impl Drop for Unigraph {
 }
 
 impl fmt::Display for Unigraph {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "Unigraph {}", self.id)?;
-        writeln!(f, "------------------------")?;
+    #[inline]
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.fmt_impl(f)
+    }
+}
 
-        let mut id = 0;
-        let mut tensors = BTreeMap::new();
-        for op in &self.ops {
-            use std::collections::btree_map::Entry::*;
+impl Graph for Unigraph {
+    type Op = Operator;
 
-            writeln!(f)?;
-            let origin = id;
-            for t in op.inputs.iter().chain(&op.outputs) {
-                if let Vacant(entry) = tensors.entry(Arc::as_ptr(t)) {
-                    writeln!(f, "_{} = {t}", id)?;
-                    entry.insert(id);
-                    id += 1;
-                }
-            }
-            if id != origin {
-                writeln!(f)?;
-            }
-            writeln!(
-                f,
-                "({}) = {:?}({})",
-                op.outputs
-                    .iter()
-                    .map(|t| format!("_{}", tensors[&Arc::as_ptr(t)]))
-                    .collect::<Vec<_>>()
-                    .join(", "),
-                op.op_type,
-                op.inputs
-                    .iter()
-                    .map(|t| format!("_{}", tensors[&Arc::as_ptr(t)]))
-                    .collect::<Vec<_>>()
-                    .join(", "),
-            )?;
-        }
+    #[inline]
+    fn ops(&self) -> &[Self::Op] {
+        &self.ops
+    }
 
-        Ok(())
+    #[inline]
+    fn get_tensor(&self, pos: &<Self::Op as OpTrait>::TensorPos) -> Tensor {
+        pos.0.upgrade().unwrap().tensor.clone()
+    }
+}
+
+pub struct Operator {
+    pub op_type: OpType,
+    pub inputs: Vec<Arc<LinkedTensor>>,
+    pub outputs: Vec<Arc<LinkedTensor>>,
+}
+
+#[derive(Clone, Debug)]
+#[repr(transparent)]
+pub struct WeakTensor(Weak<LinkedTensor>);
+
+impl PartialEq for WeakTensor {
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.0.ptr_eq(&other.0)
+    }
+}
+
+impl Eq for WeakTensor {}
+
+impl PartialOrd for WeakTensor {
+    #[inline]
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        self.0.as_ptr().partial_cmp(&other.0.as_ptr())
+    }
+}
+
+impl Ord for WeakTensor {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.0.as_ptr().cmp(&other.0.as_ptr())
+    }
+}
+
+impl OpTrait for Operator {
+    type TensorPos = WeakTensor;
+
+    #[inline]
+    fn op_type(&self) -> &OpType {
+        &self.op_type
+    }
+
+    #[inline]
+    fn inputs(&self) -> Vec<Self::TensorPos> {
+        self.inputs
+            .iter()
+            .map(Arc::downgrade)
+            .map(WeakTensor)
+            .collect()
+    }
+
+    #[inline]
+    fn outputs(&self) -> Vec<Self::TensorPos> {
+        self.outputs
+            .iter()
+            .map(Arc::downgrade)
+            .map(WeakTensor)
+            .collect()
     }
 }

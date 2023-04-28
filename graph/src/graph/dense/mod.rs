@@ -3,6 +3,7 @@
 use super::Operator as OpTrait;
 use crate::Tensor;
 use basic_operator::OpType;
+use core::cmp::Ordering;
 use std::num::NonZeroUsize;
 
 pub use graph::Unigraph;
@@ -57,6 +58,24 @@ impl OpIdx {
 pub struct OutletPos {
     op_idx: OpIdx,
     slot: usize,
+}
+
+impl PartialOrd for OutletPos {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        match self.op_idx.get().partial_cmp(&other.op_idx.get()) {
+            Some(Ordering::Equal) => self.slot.partial_cmp(&other.slot),
+            ord => ord,
+        }
+    }
+}
+
+impl Ord for OutletPos {
+    fn cmp(&self, other: &Self) -> Ordering {
+        match self.op_idx.get().cmp(&other.op_idx.get()) {
+            Ordering::Equal => self.slot.cmp(&other.slot),
+            ord => ord,
+        }
+    }
 }
 
 #[allow(unused)]

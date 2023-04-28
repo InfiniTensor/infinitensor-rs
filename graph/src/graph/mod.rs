@@ -3,29 +3,26 @@ pub mod linked;
 
 use crate::Tensor;
 use basic_operator::OpType;
-use std::{collections::BTreeMap, fmt};
+use std::{
+    collections::BTreeMap,
+    fmt::{self, Display},
+};
 
 pub trait Operator {
-    type TensorPos;
+    type TensorPos: Ord + Clone;
 
     fn op_type(&self) -> &OpType;
     fn inputs(&self) -> Vec<Self::TensorPos>;
     fn outputs(&self) -> Vec<Self::TensorPos>;
 }
 
-pub trait Graph {
+pub trait Graph: Display {
     type Op: Operator;
 
     fn ops(&self) -> &[Self::Op];
-    fn get_tensor(&self, pos: &<Self::Op as Operator>::TensorPos) -> &Tensor;
-}
+    fn get_tensor(&self, pos: &<Self::Op as Operator>::TensorPos) -> Tensor;
 
-impl<O> fmt::Display for dyn Graph<Op = O>
-where
-    O: Operator,
-    O::TensorPos: Ord + Clone,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt_impl(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let mut id = 0;
         let mut tensors = BTreeMap::new();
         for op in self.ops() {
