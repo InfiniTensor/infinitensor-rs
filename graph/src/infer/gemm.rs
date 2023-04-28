@@ -24,12 +24,12 @@ pub(super) fn infer(
         .data
         .as_ref()
         .expect("TransA must be const")
-        .as_slice::<bool>()[0];
+        .as_typed_slice::<bool>()[0];
     let trans_b = trans_b
         .data
         .as_ref()
         .expect("TransA must be const")
-        .as_slice::<bool>()[0];
+        .as_typed_slice::<bool>()[0];
 
     let a = match a.shape.as_slice() {
         &[x, y] => {

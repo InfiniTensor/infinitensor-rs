@@ -8,3 +8,4 @@ edition = "2021"
 [dependencies]
 common = { path = "../common" }
 basic_operator = { path = "../basic_operator" }
+graph = { path = "../graph" }

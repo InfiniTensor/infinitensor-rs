@@ -78,7 +78,7 @@ impl fmt::Display for Tensor {
                 .map(usize::to_string)
                 .collect::<Vec<_>>()
                 .join("x"),
-            invoke_ty!(self.data_type, self.data.data(), data_to_string),
+            invoke_ty!(self.data_type, self.data.as_slice(), data_to_string),
         )
     }
 }

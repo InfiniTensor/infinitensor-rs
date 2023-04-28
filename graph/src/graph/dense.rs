@@ -1,85 +1,22 @@
-mod infer;
-
+﻿use crate::{infer, Tensor};
 use basic_operator::OpType;
 use common::{AsDataType, Data, DataType};
 use std::{num::NonZeroUsize, sync::Arc};
 
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-#[repr(transparent)]
-struct OpIdx(Option<NonZeroUsize>);
-
-impl OpIdx {
-    #[inline]
-    pub const fn new_unchecked(idx: usize) -> Self {
-        Self(Some(unsafe { NonZeroUsize::new_unchecked(idx + 1) }))
-    }
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-struct InletPos {
-    op_idx: OpIdx,
-    slot: usize,
-}
-
-#[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub struct OutletPos {
-    op_idx: OpIdx,
-    slot: usize,
-}
-
-struct Outlet {
-    targets: Vec<InletPos>,
-    tensor: Tensor,
-}
-
-#[derive(Clone)]
-struct Tensor {
-    shape: Vec<usize>,
-    dtype: DataType,
-    data: Option<Arc<Data>>,
-}
-
-impl Tensor {
-    #[inline]
-    pub fn clone_info(&self) -> Self {
-        Self {
-            shape: self.shape.clone(),
-            dtype: self.dtype,
-            data: None,
-        }
-    }
-
-    #[inline]
-    pub fn is_variable(&self) -> bool {
-        matches!(self.shape.as_slice(), &[1])
-    }
-
-    #[inline]
-    pub fn is_typed_variable<T: AsDataType>(&self) -> bool {
-        self.dtype == T::as_data_type() && matches!(self.shape.as_slice(), &[1])
-    }
-}
-
-struct Operator {
-    op_type: OpType,
-    inputs: Vec<OutletPos>,
-    outputs: Vec<Outlet>,
-}
-
-pub struct Builder {
+pub struct Unigraph {
     inputs: Vec<Outlet>,
     outputs: Vec<InletPos>,
     operators: Vec<Operator>,
 }
 
-impl Default for Builder {
+impl Default for Unigraph {
     #[inline]
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl Builder {
+impl Unigraph {
     #[inline]
     pub const fn new() -> Self {
         Self {
@@ -107,6 +44,11 @@ impl Builder {
             op_idx: OpIdx(None),
             slot,
         }
+    }
+
+    #[inline]
+    pub fn set_output(&mut self, OutletPos { op_idx, slot }: OutletPos) {
+        self.outputs.push(InletPos { op_idx, slot });
     }
 
     pub fn push_operator(&mut self, op_type: OpType, inputs: Vec<OutletPos>) -> Vec<OutletPos> {
@@ -194,4 +136,38 @@ impl Builder {
             &mut self.inputs[pos.slot]
         }
     }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+#[repr(transparent)]
+struct OpIdx(Option<NonZeroUsize>);
+
+impl OpIdx {
+    #[inline]
+    pub const fn new_unchecked(idx: usize) -> Self {
+        Self(Some(unsafe { NonZeroUsize::new_unchecked(idx + 1) }))
+    }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+struct InletPos {
+    op_idx: OpIdx,
+    slot: usize,
+}
+
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub struct OutletPos {
+    op_idx: OpIdx,
+    slot: usize,
+}
+
+struct Outlet {
+    targets: Vec<InletPos>,
+    tensor: Tensor,
+}
+
+struct Operator {
+    op_type: OpType,
+    inputs: Vec<OutletPos>,
+    outputs: Vec<Outlet>,
 }

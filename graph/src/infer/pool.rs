@@ -24,10 +24,10 @@ pub(super) fn infer(
             .map(|x| *x as i64)
             .collect::<Vec<_>>()
             .as_slice(),
-        kernel.as_slice::<i64>(),
-        dilations.as_slice::<i64>(),
-        pads.as_slice::<i64>(),
-        strides.as_slice::<i64>(),
+        kernel.as_typed_slice::<i64>(),
+        dilations.as_typed_slice::<i64>(),
+        pads.as_typed_slice::<i64>(),
+        strides.as_typed_slice::<i64>(),
     );
 
     Tensor {

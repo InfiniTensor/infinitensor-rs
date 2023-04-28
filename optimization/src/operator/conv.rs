@@ -1,4 +1,4 @@
-﻿use crate::{Operator, Tensor};
+﻿use crate::{graph::Operator, Tensor};
 use std::sync::Arc;
 
 #[repr(transparent)]

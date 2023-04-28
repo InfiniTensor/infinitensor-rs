@@ -1,4 +1,4 @@
-﻿use crate::Unigraph;
+﻿use crate::graph::Unigraph;
 use std::fmt;
 
 pub struct Mutant {

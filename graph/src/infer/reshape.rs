@@ -14,7 +14,7 @@ pub(super) fn infer(data: &Tensor, shape: &Tensor) -> Tensor {
     let Some(val) = shape.data.as_ref()
     else { panic!("Shape must be const") };
 
-    let shape = val.as_slice::<i64>();
+    let shape = val.as_typed_slice::<i64>();
     assert_eq!(dim, shape.len());
 
     Tensor {

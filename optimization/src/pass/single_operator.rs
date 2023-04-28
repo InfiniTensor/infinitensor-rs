@@ -1,6 +1,6 @@
 ﻿use std::sync::Arc;
 
-use crate::{operator::Conv, Tensor, Unigraph};
+use crate::{graph::Unigraph, operator::Conv, Tensor};
 use basic_operator::{infer, OpType};
 use common::Data;
 
@@ -28,8 +28,8 @@ pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
         let [f,c_,r,s] = *conv.kernel().shape() else {
             unreachable!()
         };
-        let dilations = conv.dilations().data().as_slice::<i32>();
-        let strides = conv.strides().data().as_slice::<i32>();
+        let dilations = conv.dilations().data().as_typed_slice::<i32>();
+        let strides = conv.strides().data().as_typed_slice::<i32>();
         debug_assert_eq!(conv.input().data_type(), conv.kernel().data_type());
         let dt = conv.input().data_type();
 
