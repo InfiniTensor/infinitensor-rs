@@ -23,24 +23,29 @@ impl Unigraph {
         }
     }
 
-    pub fn push_input<T: AsDataType>(
-        &mut self,
-        shape: Vec<usize>,
-        data: Option<Vec<T>>,
-    ) -> OutletPos {
+    pub fn push_input(&mut self, tensor: Tensor) -> OutletPos {
         let slot = self.inputs.len();
         self.inputs.push(Outlet {
             targets: Vec::new(),
-            tensor: Tensor {
-                shape,
-                dtype: T::as_data_type(),
-                data: data.map(Data::cpu).map(Arc::new),
-            },
+            tensor,
         });
         OutletPos {
             op_idx: OpIdx(None),
             slot,
         }
+    }
+
+    #[inline]
+    pub fn push_typed_input<T: AsDataType>(
+        &mut self,
+        shape: Vec<usize>,
+        data: Option<Vec<T>>,
+    ) -> OutletPos {
+        self.push_input(Tensor {
+            shape,
+            dtype: T::as_data_type(),
+            data: data.map(Data::cpu).map(Arc::new),
+        })
     }
 
     #[inline]
@@ -62,15 +67,12 @@ impl Unigraph {
         self.push_op_inner(op_type, inputs, outputs)
     }
 
-    pub fn push_custom<I>(
+    pub fn push_custom(
         &mut self,
         name: String,
         inputs: Vec<OutletPos>,
-        outputs: I,
-    ) -> Vec<OutletPos>
-    where
-        I: IntoIterator<Item = (Vec<usize>, DataType)>,
-    {
+        outputs: impl IntoIterator<Item = (Vec<usize>, DataType)>,
+    ) -> Vec<OutletPos> {
         self.push_op_inner(
             OpType::Custom(name),
             inputs,
