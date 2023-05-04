@@ -48,7 +48,7 @@ impl Unigraph {
         self.outputs.push(InletPos { op_idx, slot });
     }
 
-    pub fn push_operator(&mut self, op_type: OpType, inputs: Vec<OutletPos>) -> Vec<OutletPos> {
+    pub fn push_op(&mut self, op_type: OpType, inputs: Vec<OutletPos>) -> Vec<OutletPos> {
         if let OpType::Custom(_) = op_type {
             panic!("Use `push_custom` instead to push custom operator.")
         }
