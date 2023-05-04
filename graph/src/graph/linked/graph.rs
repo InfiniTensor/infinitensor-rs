@@ -1,6 +1,7 @@
 ﻿use super::{
     super::Operator as OpTrait,
     tensor::{LinkedTensor, TensorPos},
+    Operator,
 };
 use crate::{graph::Graph, Tensor};
 use basic_operator::OpType;
@@ -8,20 +9,13 @@ use std::{
     fmt,
     sync::{
         atomic::{AtomicUsize, Ordering::AcqRel},
-        Arc, Weak,
+        Arc,
     },
 };
 
 pub struct Unigraph {
     id: usize,
     ops: Vec<Operator>,
-}
-
-impl Default for Unigraph {
-    #[inline]
-    fn default() -> Self {
-        Self::new()
-    }
 }
 
 impl Unigraph {
@@ -102,6 +96,13 @@ impl Drop for Unigraph {
     }
 }
 
+impl Default for Unigraph {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for Unigraph {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -120,64 +121,5 @@ impl Graph for Unigraph {
     #[inline]
     fn get_tensor(&self, pos: &<Self::Op as OpTrait>::TensorPos) -> Tensor {
         pos.0.upgrade().unwrap().tensor.clone()
-    }
-}
-
-pub struct Operator {
-    pub op_type: OpType,
-    pub inputs: Vec<Arc<LinkedTensor>>,
-    pub outputs: Vec<Arc<LinkedTensor>>,
-}
-
-#[derive(Clone, Debug)]
-#[repr(transparent)]
-pub struct WeakTensor(Weak<LinkedTensor>);
-
-impl PartialEq for WeakTensor {
-    #[inline]
-    fn eq(&self, other: &Self) -> bool {
-        self.0.ptr_eq(&other.0)
-    }
-}
-
-impl Eq for WeakTensor {}
-
-impl PartialOrd for WeakTensor {
-    #[inline]
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        self.0.as_ptr().partial_cmp(&other.0.as_ptr())
-    }
-}
-
-impl Ord for WeakTensor {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.as_ptr().cmp(&other.0.as_ptr())
-    }
-}
-
-impl OpTrait for Operator {
-    type TensorPos = WeakTensor;
-
-    #[inline]
-    fn op_type(&self) -> &OpType {
-        &self.op_type
-    }
-
-    #[inline]
-    fn inputs(&self) -> Vec<Self::TensorPos> {
-        self.inputs
-            .iter()
-            .map(Arc::downgrade)
-            .map(WeakTensor)
-            .collect()
-    }
-
-    #[inline]
-    fn outputs(&self) -> Vec<Self::TensorPos> {
-        self.outputs
-            .iter()
-            .map(Arc::downgrade)
-            .map(WeakTensor)
-            .collect()
     }
 }

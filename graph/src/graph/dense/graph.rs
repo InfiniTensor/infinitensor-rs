@@ -13,13 +13,6 @@ pub struct Unigraph {
     operators: Vec<Operator>,
 }
 
-impl Default for Unigraph {
-    #[inline]
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
 impl Unigraph {
     #[inline]
     pub const fn new() -> Self {
@@ -134,6 +127,13 @@ impl Unigraph {
         } else {
             &mut self.inputs[pos.slot]
         }
+    }
+}
+
+impl Default for Unigraph {
+    #[inline]
+    fn default() -> Self {
+        Self::new()
     }
 }
 

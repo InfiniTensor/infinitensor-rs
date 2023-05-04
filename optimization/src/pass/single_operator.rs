@@ -1,6 +1,9 @@
 ﻿use crate::operator::Conv;
 use basic_operator::{infer, OpType};
-use graph::linked::{LinkedTensor, Unigraph};
+use graph::{
+    linked::{LinkedTensor, Unigraph},
+    Operator,
+};
 use std::sync::Arc;
 
 #[derive(Debug)]
@@ -11,7 +14,7 @@ pub fn partition(g: Unigraph) -> Vec<(Unigraph, SingleOp)> {
         .into_iter()
         .map(|op| {
             let mut g = Unigraph::new();
-            g.push_op(op.op_type, op.inputs, op.outputs);
+            g.push_op(op.op_type().clone(), op.inputs, op.outputs);
             (g, SingleOp)
         })
         .collect()
@@ -20,7 +23,7 @@ pub fn partition(g: Unigraph) -> Vec<(Unigraph, SingleOp)> {
 pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
     let mut ans = Vec::new();
     let op = g.ops().first().unwrap();
-    if let OpType::Conv = op.op_type {
+    if let OpType::Conv = op.op_type() {
         let conv = Conv::new(op);
         let [n,c,h,w] = *conv.input().shape() else {
             unreachable!()
