@@ -2,7 +2,7 @@
 
 // 1st: new shape
 // 2nd: permutation
-pub fn transpose<T, U>(shape: &[T], src: &[U], tgt: &[U]) -> (Vec<T>, Vec<i32>)
+pub fn infer<T, U>(shape: &[T], src: &[U], tgt: &[U]) -> (Vec<T>, Vec<i32>)
 where
     T: Clone,
     U: Ord,
@@ -29,7 +29,7 @@ where
 #[test]
 fn test_transpose() {
     assert_eq!(
-        transpose(&[1, 2, 3, 4], "nchw".as_bytes(), "nhwc".as_bytes()),
+        infer(&[1, 2, 3, 4], "nchw".as_bytes(), "nhwc".as_bytes()),
         (vec![1, 3, 4, 2], vec![0, 2, 3, 1])
     );
 }

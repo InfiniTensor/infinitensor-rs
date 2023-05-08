@@ -24,13 +24,13 @@ impl Tensor {
     }
 
     #[inline]
-    pub fn is_variable(&self) -> bool {
-        matches!(self.shape.as_slice(), &[1])
+    pub fn is_scalar(&self) -> bool {
+        self.shape.is_empty()
     }
 
     #[inline]
-    pub fn is_typed_variable<T: AsDataType>(&self) -> bool {
-        self.is_variable() && self.dtype == T::as_data_type()
+    pub fn is_typed_scalar<T: AsDataType>(&self) -> bool {
+        self.is_scalar() && self.dtype == T::as_data_type()
     }
 
     #[inline]

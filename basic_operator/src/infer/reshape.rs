@@ -1,4 +1,4 @@
-﻿pub fn reshape(data: &[usize], shape: &[i64]) -> Vec<usize> {
+﻿pub fn infer(data: &[usize], shape: &[i64]) -> Vec<usize> {
     debug_assert_eq!(data.len(), shape.len());
 
     let mut void = None;
@@ -30,7 +30,7 @@
 #[test]
 fn test_rehape() {
     assert_eq!(
-        reshape(&[1, 2, 3, 4, 5], &[1, 0, 5, 2, -1],),
+        infer(&[1, 2, 3, 4, 5], &[1, 0, 5, 2, -1],),
         &[1, 2, 5, 2, 6]
     );
 }

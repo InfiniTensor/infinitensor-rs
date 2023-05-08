@@ -6,7 +6,9 @@ mod matmul;
 mod pool;
 mod reduce;
 mod reshape;
+mod squeeze;
 mod unary;
+mod unsqueeze;
 
 use crate::Tensor;
 use basic_operator::OpType;
@@ -39,6 +41,7 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::Cast => match inputs {
             &[data, dtype] => {
                 assert!(dtype.shape.is_empty(), "Cast dtype must be empty");
+                assert!(dtype.data.is_none(), "Cast dtype must be empty");
                 vec![Tensor {
                     shape: data.shape.clone(),
                     dtype: dtype.dtype,
@@ -174,7 +177,10 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::SpaceToDepth => todo!(),
         OpType::Split => todo!(),
         OpType::SplitToSequence => todo!(),
-        OpType::Squeeze => todo!(),
+        OpType::Squeeze => match inputs {
+            &[data, axes] => vec![squeeze::infer(data, axes)],
+            _ => panic!("Squeeze operator must have two inputs"),
+        },
         OpType::StringNormalizer => todo!(),
         OpType::TfIdfVectorizer => todo!(),
         OpType::ThresholdedRelu => todo!(),
@@ -183,7 +189,10 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::Transpose => todo!(),
         OpType::Trilu => todo!(),
         OpType::Unique => todo!(),
-        OpType::Unsqueeze => todo!(),
+        OpType::Unsqueeze => match inputs {
+            &[data, axes] => vec![unsqueeze::infer(data, axes)],
+            _ => panic!("Unsqueeze operator must have two inputs"),
+        },
         OpType::Upsample => todo!(),
         OpType::Where => todo!(),
         OpType::Custom(_) => todo!(),

@@ -14,11 +14,11 @@ pub(super) fn infer(
     assert_eq!(dtype, c.dtype);
 
     assert!(alpha.dtype.is_float());
-    assert!(alpha.is_variable());
+    assert!(alpha.is_scalar());
     assert!(beta.dtype.is_float());
-    assert!(beta.is_variable());
-    assert!(trans_a.is_typed_variable::<bool>());
-    assert!(trans_b.is_typed_variable::<bool>());
+    assert!(beta.is_scalar());
+    assert!(trans_a.is_typed_scalar::<bool>());
+    assert!(trans_b.is_typed_scalar::<bool>());
 
     let trans_a = trans_a
         .data

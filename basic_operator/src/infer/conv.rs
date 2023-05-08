@@ -1,7 +1,7 @@
 ﻿use super::pool;
 use std::ops::{Add, Div, Mul, Sub};
 
-pub fn conv<T>(data: &[T], kernel: &[T], dilations: &[T], pads: &[T], strides: &[T]) -> Vec<T>
+pub fn infer<T>(data: &[T], kernel: &[T], dilations: &[T], pads: &[T], strides: &[T]) -> Vec<T>
 where
     T: Clone + Add<Output = T> + Sub<Output = T> + Mul<Output = T> + Div<Output = T> + From<i32>,
 {
@@ -19,7 +19,7 @@ where
 #[test]
 fn test_conv() {
     assert_eq!(
-        conv(
+        infer(
             &[7, 3, 8, 8],
             &[6, 3, 3, 3],
             &[2, 2],
@@ -30,7 +30,7 @@ fn test_conv() {
     );
 
     assert_eq!(
-        conv(
+        infer(
             &[7, 3, 8, 8],
             &[6, 3, 3, 3],
             &[1, 1],
@@ -41,7 +41,7 @@ fn test_conv() {
     );
 
     assert_eq!(
-        conv(
+        infer(
             &[7, 8, 8, 8],
             &[6, 2, 3, 3],
             &[1, 1],

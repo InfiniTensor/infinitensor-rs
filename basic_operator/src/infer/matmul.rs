@@ -1,6 +1,6 @@
 ﻿use std::fmt::Debug;
 
-pub fn matmul<T>(a: &[T], b: &[T]) -> Vec<T>
+pub fn infer<T>(a: &[T], b: &[T]) -> Vec<T>
 where
     T: PartialEq + Clone + Debug,
 {
@@ -17,6 +17,6 @@ where
 
 #[test]
 fn test_matmul() {
-    assert_eq!(matmul(&[2, 3, 4], &[2, 4, 6]), vec![2, 3, 6]);
-    assert_eq!(matmul(&[1, 2, 3, 4], &[1, 2, 4, 1]), vec![1, 2, 3, 1]);
+    assert_eq!(infer(&[2, 3, 4], &[2, 4, 6]), vec![2, 3, 6]);
+    assert_eq!(infer(&[1, 2, 3, 4], &[1, 2, 4, 1]), vec![1, 2, 3, 1]);
 }
