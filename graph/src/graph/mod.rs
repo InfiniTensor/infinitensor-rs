@@ -32,7 +32,7 @@ pub trait Graph: Display {
             let origin = id;
             for t in op.inputs().iter().chain(&op.outputs()) {
                 if let Vacant(entry) = tensors.entry(t.clone()) {
-                    writeln!(f, "_{id} = {}", self.get_tensor(t))?;
+                    writeln!(f, "${id} := {}", self.get_tensor(t))?;
                     entry.insert(id);
                     id += 1;
                 }
@@ -42,16 +42,18 @@ pub trait Graph: Display {
             }
             writeln!(
                 f,
-                "({}) = {:?}({})",
+                "{}{}{} = {:?}({})",
+                if op.outputs().len() == 1 { "" } else { "(" },
                 op.outputs()
                     .iter()
-                    .map(|t| format!("_{}", tensors[t]))
+                    .map(|t| format!("${}", tensors[t]))
                     .collect::<Vec<_>>()
                     .join(", "),
+                if op.outputs().len() == 1 { "" } else { ")" },
                 op.op_type(),
                 op.inputs()
                     .iter()
-                    .map(|t| format!("_{}", tensors[t]))
+                    .map(|t| format!("${}", tensors[t]))
                     .collect::<Vec<_>>()
                     .join(", "),
             )?;
