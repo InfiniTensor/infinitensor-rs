@@ -95,7 +95,10 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::HardSigmoid => todo!(),
         OpType::HardSwish => todo!(),
         OpType::Hardmax => todo!(),
-        OpType::Identity => todo!(),
+        OpType::Identity => match inputs {
+            &[x] => vec![x.clone()],
+            _ => panic!("Identity operator must have one input"),
+        },
         OpType::If => todo!(),
         OpType::InstanceNormalization => todo!(),
         OpType::IsInf => todo!(),
@@ -103,7 +106,15 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::LRN => todo!(),
         OpType::LSTM => todo!(),
         OpType::LayerNormalization => todo!(),
-        OpType::LeakyRelu => todo!(),
+        OpType::LeakyRelu => match inputs {
+            &[data, alpha] => {
+                assert!(alpha.is_scalar());
+                assert!(alpha.dtype().is_float());
+                assert!(data.dtype().is_float());
+                vec![data.clone()]
+            }
+            _ => panic!("LeakyRelu operator must have two inputs"),
+        },
         OpType::LogSoftmax => todo!(),
         OpType::Loop => todo!(),
         OpType::LpNormalization => todo!(),
@@ -123,7 +134,18 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::Optional => todo!(),
         OpType::OptionalGetElement => todo!(),
         OpType::OptionalHasElement => todo!(),
-        OpType::PRelu => todo!(),
+        OpType::PRelu => match inputs {
+            &[data, alpha] => {
+                assert!(alpha.dtype().is_numeric());
+                assert_eq!(alpha.dtype(), data.dtype());
+                vec![Tensor {
+                    shape: broadcast::unidirection(data.shape(), alpha.shape()).unwrap(),
+                    dtype: data.dtype(),
+                    data: None,
+                }]
+            }
+            _ => panic!("LeakyRelu operator must have two inputs"),
+        },
         OpType::Pad => todo!(),
         OpType::QLinearConv => todo!(),
         OpType::QLinearMatMul => todo!(),

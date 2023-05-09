@@ -22,7 +22,7 @@ pub(super) fn multidirection(tensors: &[&[usize]]) -> Option<Vec<usize>> {
 }
 
 pub(super) fn unidirection(target: &[usize], source: &[usize]) -> Option<Vec<usize>> {
-    let mut ans = vec![0; target.len()];
+    let mut ans: Vec<usize> = vec![0; target.len()];
     let mut iter = source.iter().rev();
     for (y, x) in ans.iter_mut().rev().zip(target.iter().rev().copied()) {
         *y = if [1, x].contains(iter.next().unwrap_or(&1)) {

@@ -61,6 +61,21 @@ impl DataType {
     }
 
     #[inline]
+    pub const fn is_integer(&self) -> bool {
+        matches!(
+            self,
+            DataType::UINT8
+                | DataType::INT8
+                | DataType::UINT16
+                | DataType::INT16
+                | DataType::INT32
+                | DataType::INT64
+                | DataType::UINT32
+                | DataType::UINT64
+        )
+    }
+
+    #[inline]
     pub const fn is_float(&self) -> bool {
         matches!(self, DataType::FLOAT | DataType::FLOAT16 | DataType::DOUBLE)
     }
