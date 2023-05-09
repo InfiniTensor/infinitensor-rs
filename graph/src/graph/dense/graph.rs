@@ -1,19 +1,19 @@
 ﻿use super::{InletPos, OpIdx, Operator, Outlet, OutletPos};
 use crate::{
-    graph::{Graph, Operator as OpTrait},
+    graph::{Graph as GraphTrait, Operator as OpTrait},
     infer, Tensor,
 };
 use basic_operator::OpType;
 use common::{AsDataType, Data, DataType};
 use std::{fmt, sync::Arc};
 
-pub struct Unigraph {
+pub struct Graph {
     inputs: Vec<Outlet>,
     outputs: Vec<InletPos>,
     operators: Vec<Operator>,
 }
 
-impl Unigraph {
+impl Graph {
     #[inline]
     pub const fn new() -> Self {
         Self {
@@ -35,7 +35,6 @@ impl Unigraph {
         }
     }
 
-    #[inline]
     pub fn push_typed_input<T: AsDataType>(
         &mut self,
         shape: Vec<usize>,
@@ -132,21 +131,21 @@ impl Unigraph {
     }
 }
 
-impl Default for Unigraph {
+impl Default for Graph {
     #[inline]
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl fmt::Display for Unigraph {
+impl fmt::Display for Graph {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.fmt_impl(f)
     }
 }
 
-impl Graph for Unigraph {
+impl GraphTrait for Graph {
     type Op = Operator;
 
     #[inline]

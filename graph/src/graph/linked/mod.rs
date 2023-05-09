@@ -6,7 +6,7 @@ use super::Operator as OpTrait;
 use basic_operator::OpType;
 use std::sync::{Arc, Weak};
 
-pub use graph::Unigraph;
+pub use graph::Graph;
 pub use linked_tensor::{LinkedTensor, TensorPos};
 
 #[derive(Clone, Debug)]

@@ -1,9 +1,10 @@
 ﻿use super::{
+    super::Graph as GraphTrait,
     super::Operator as OpTrait,
     linked_tensor::{LinkedTensor, TensorPos},
     Operator,
 };
-use crate::{graph::Graph, Tensor};
+use crate::Tensor;
 use basic_operator::OpType;
 use std::{
     fmt,
@@ -13,12 +14,12 @@ use std::{
     },
 };
 
-pub struct Unigraph {
+pub struct Graph {
     id: usize,
     ops: Vec<Operator>,
 }
 
-impl Unigraph {
+impl Graph {
     #[inline]
     pub fn new() -> Self {
         static ID: AtomicUsize = AtomicUsize::new(0);
@@ -89,28 +90,28 @@ impl Unigraph {
     }
 }
 
-impl Drop for Unigraph {
+impl Drop for Graph {
     #[inline]
     fn drop(&mut self) {
         self.drop_inplace();
     }
 }
 
-impl Default for Unigraph {
+impl Default for Graph {
     #[inline]
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl fmt::Display for Unigraph {
+impl fmt::Display for Graph {
     #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         self.fmt_impl(f)
     }
 }
 
-impl Graph for Unigraph {
+impl GraphTrait for Graph {
     type Op = Operator;
 
     #[inline]

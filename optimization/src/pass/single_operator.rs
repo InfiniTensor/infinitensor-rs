@@ -1,7 +1,7 @@
 ﻿use crate::operator::Conv;
 use basic_operator::{infer, OpType};
 use graph::{
-    linked::{LinkedTensor, Unigraph},
+    linked::{Graph, LinkedTensor},
     Operator,
 };
 use std::sync::Arc;
@@ -9,18 +9,18 @@ use std::sync::Arc;
 #[derive(Debug)]
 pub struct SingleOp;
 
-pub fn partition(g: Unigraph) -> Vec<(Unigraph, SingleOp)> {
+pub fn partition(g: Graph) -> Vec<(Graph, SingleOp)> {
     g.take_ops()
         .into_iter()
         .map(|op| {
-            let mut g = Unigraph::new();
+            let mut g = Graph::new();
             g.push_op(op.op_type().clone(), op.inputs, op.outputs);
             (g, SingleOp)
         })
         .collect()
 }
 
-pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
+pub fn mutate(g: &Graph, _: &SingleOp) -> Vec<Graph> {
     let mut ans = Vec::new();
     let op = g.ops().first().unwrap();
     if let OpType::Conv = op.op_type() {
@@ -49,7 +49,7 @@ pub fn mutate(g: &Unigraph, _: &SingleOp) -> Vec<Unigraph> {
         if c != c_ || strides.iter().any(|x| *x != 1) {
             // nothing to do
         } else if r == 1 && s == 1 {
-            let mut mutant = Unigraph::new();
+            let mut mutant = Graph::new();
 
             // (input, "nchw"->"nhwc") -|transpose|-> tranposed -|reshape|-> t0
             let (tranposed, permutation) = transpose(conv.input(), "nchw", "nhwc");
@@ -110,7 +110,7 @@ fn test_1x1_conv() {
     use crate::mutation::Partition;
     use common::DataType;
 
-    let mut g = Unigraph::new();
+    let mut g = Graph::new();
     let input = LinkedTensor::share(vec![1, 3, 8, 8], DataType::FLOAT, None);
     let kernel = LinkedTensor::share(vec![16, 3, 1, 1], DataType::FLOAT, None);
     let output = LinkedTensor::share(vec![1, 16, 8, 8], DataType::FLOAT, None);

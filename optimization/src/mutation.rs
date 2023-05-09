@@ -1,14 +1,14 @@
-﻿use graph::{linked::Unigraph, Operator};
+﻿use graph::{linked::Graph, Operator};
 use std::fmt;
 
 pub struct Mutant {
-    graph: Unigraph,
+    graph: Graph,
     score: f32,
 }
 
 impl Mutant {
     #[inline]
-    pub const fn new(graph: Unigraph) -> Self {
+    pub const fn new(graph: Graph) -> Self {
         Self { graph, score: 1f32 }
     }
 }
@@ -22,12 +22,12 @@ pub struct Partition<T>(Vec<SubGraph<T>>);
 pub struct Mutation<T>(Vec<SubGraph<T>>);
 pub struct Rating<T>(Vec<SubGraph<T>>);
 
-pub type PartitionFunc<T> = dyn Fn(Unigraph) -> Vec<(Unigraph, T)>;
-pub type MutationFunc<T> = dyn Fn(&Unigraph, &T) -> Vec<Unigraph>;
-pub type RatingFunc = dyn Fn(&Unigraph) -> f32;
+pub type PartitionFunc<T> = dyn Fn(Graph) -> Vec<(Graph, T)>;
+pub type MutationFunc<T> = dyn Fn(&Graph, &T) -> Vec<Graph>;
+pub type RatingFunc = dyn Fn(&Graph) -> f32;
 
 impl<T> Partition<T> {
-    pub fn new(g: Unigraph, f: &PartitionFunc<T>) -> Self {
+    pub fn new(g: Graph, f: &PartitionFunc<T>) -> Self {
         let mut ans = Partition::<T>(Default::default());
         for (g, ty) in f(g) {
             ans.0.push(SubGraph {
@@ -88,9 +88,9 @@ impl<T> Rating<T> {
         list_size(&self.0)
     }
 
-    pub fn select(&self, indices: &[usize]) -> Unigraph {
+    pub fn select(&self, indices: &[usize]) -> Graph {
         debug_assert_eq!(indices.len(), self.0.len());
-        let mut ans = Unigraph::new();
+        let mut ans = Graph::new();
         self.0
             .iter()
             .zip(indices)

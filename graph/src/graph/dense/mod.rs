@@ -7,7 +7,7 @@ use basic_operator::OpType;
 use core::cmp::Ordering;
 use std::num::NonZeroUsize;
 
-pub use graph::Unigraph;
+pub use graph::Graph;
 
 pub struct Operator {
     op_idx: OpIdx,

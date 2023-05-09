@@ -1,7 +1,7 @@
 ﻿use crate::{linked::LinkedTensor, Graph, Operator};
 use std::collections::BTreeMap;
 
-impl<Op: Operator> From<&dyn Graph<Op = Op>> for super::Unigraph {
+impl<Op: Operator> From<&dyn Graph<Op = Op>> for super::Graph {
     fn from(graph: &dyn Graph<Op = Op>) -> Self {
         let mut ans = Self::new();
         let mut tensors = BTreeMap::new();
