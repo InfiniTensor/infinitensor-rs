@@ -1,9 +1,2 @@
 [workspace]
-members = [
-    "common",
-    "basic_operator",
-    "graph",
-    "optimization",
-    "kernel-lib",
-    "runtime",
-]
+members = ["common", "basic_operator", "graph", "optimization", "kernel-lib"]

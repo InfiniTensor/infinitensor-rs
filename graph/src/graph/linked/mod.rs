@@ -1,13 +1,13 @@
 ﻿mod convert;
 mod graph;
-mod tensor;
+mod linked_tensor;
 
 use super::Operator as OpTrait;
 use basic_operator::OpType;
 use std::sync::{Arc, Weak};
 
 pub use graph::Unigraph;
-pub use tensor::{LinkedTensor, TensorPos};
+pub use linked_tensor::{LinkedTensor, TensorPos};
 
 #[derive(Clone, Debug)]
 #[repr(transparent)]

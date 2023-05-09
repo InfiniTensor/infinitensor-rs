@@ -2,7 +2,7 @@
 
 pub fn infer(data: &[usize], axes: &[i64]) -> Vec<usize> {
     if axes.is_empty() {
-        data.iter().copied().collect()
+        data.to_vec()
     } else {
         let len = (data.len() + axes.len()) as i64;
         let axes = axes
@@ -15,7 +15,7 @@ pub fn infer(data: &[usize], axes: &[i64]) -> Vec<usize> {
         debug_assert_eq!(data.len() + axes.len(), len);
         let mut ans = Vec::with_capacity(len);
         let mut iter = data.iter();
-        for i in 0..len as usize {
+        for i in 0..len {
             ans.push(if axes.contains(&i) {
                 1
             } else {

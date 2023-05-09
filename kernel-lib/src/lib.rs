@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use common::DataType;
 use std::{collections::HashMap, time::Duration};
 

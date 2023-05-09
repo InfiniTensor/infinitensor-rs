@@ -1,6 +1,6 @@
 ﻿use super::{
     super::Operator as OpTrait,
-    tensor::{LinkedTensor, TensorPos},
+    linked_tensor::{LinkedTensor, TensorPos},
     Operator,
 };
 use crate::{graph::Graph, Tensor};
