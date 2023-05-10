@@ -1,6 +1,7 @@
 ﻿mod binary;
 mod broadcast;
 mod compair;
+mod conv;
 mod gemm;
 mod matmul;
 mod pool;
@@ -21,12 +22,12 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         },
         OpType::Binary(b) => match inputs {
             &[x, y] => vec![binary::infer(b, x, y)],
-            _ => panic!("Binary operator must have two inputs"),
+            _ => panic!("Binary operator must have 2 inputs"),
         },
         OpType::Reduce(r) => vec![reduce::infer(r, inputs)],
         OpType::Compair(_) => match inputs {
             &[x, y] => vec![compair::infer(x, y)],
-            _ => panic!("Compair operator must have two inputs"),
+            _ => panic!("Compair operator must have 2 inputs"),
         },
         OpType::Pool(_) => match inputs {
             &[data, kernel, dilations, pads, strides] => {
@@ -48,7 +49,7 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
                     data: data.data.clone(),
                 }]
             }
-            _ => panic!("Cast operator must have two inputs"),
+            _ => panic!("Cast operator must have 2 inputs"),
         },
         OpType::CastLike => todo!(),
         OpType::Celu => todo!(),
@@ -59,7 +60,12 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::Concat => todo!(),
         OpType::ConcatFromSequence => todo!(),
         OpType::ConstantOfShape => todo!(),
-        OpType::Conv => todo!(),
+        OpType::Conv => match inputs {
+            &[data, kernel, dilations, pads, strides] => {
+                vec![conv::infer(data, kernel, dilations, pads, strides)]
+            }
+            _ => panic!("Conv operator must have 5 inputs"),
+        },
         OpType::ConvInteger => todo!(),
         OpType::ConvTranspose => todo!(),
         OpType::CumSum => todo!(),
@@ -83,7 +89,7 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
             &[a, b, c, alpha, beta, trans_a, trans_b] => {
                 vec![gemm::infer(a, b, c, alpha, beta, trans_a, trans_b)]
             }
-            _ => panic!("Gemm operator must have three inputs"),
+            _ => panic!("Gemm operator must have 3 inputs"),
         },
         OpType::GlobalAveragePool => todo!(),
         OpType::GlobalLpPool => todo!(),
@@ -97,7 +103,7 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::Hardmax => todo!(),
         OpType::Identity => match inputs {
             &[x] => vec![x.clone()],
-            _ => panic!("Identity operator must have one input"),
+            _ => panic!("Identity operator must have a single input"),
         },
         OpType::If => todo!(),
         OpType::InstanceNormalization => todo!(),
@@ -113,14 +119,14 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
                 assert!(data.dtype().is_float());
                 vec![data.clone()]
             }
-            _ => panic!("LeakyRelu operator must have two inputs"),
+            _ => panic!("LeakyRelu operator must have 2 inputs"),
         },
         OpType::LogSoftmax => todo!(),
         OpType::Loop => todo!(),
         OpType::LpNormalization => todo!(),
         OpType::MatMul => match inputs {
             &[a, b] => vec![matmul::infer(a, b)],
-            _ => panic!("MatMul operator must have two inputs"),
+            _ => panic!("MatMul operator must have 2 inputs"),
         },
         OpType::MatMulInteger => todo!(),
         OpType::MeanVarianceNormalization => todo!(),
@@ -144,7 +150,7 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
                     data: None,
                 }]
             }
-            _ => panic!("LeakyRelu operator must have two inputs"),
+            _ => panic!("LeakyRelu operator must have 2 inputs"),
         },
         OpType::Pad => todo!(),
         OpType::QLinearConv => todo!(),
@@ -169,7 +175,7 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::ReduceSumSquare => todo!(),
         OpType::Reshape => match inputs {
             &[data, shape] => vec![reshape::infer(data, shape)],
-            _ => panic!("Reshape operator must have two inputs"),
+            _ => panic!("Reshape operator must have 2 inputs"),
         },
         OpType::Resize => todo!(),
         OpType::ReverseSequence => todo!(),
@@ -201,7 +207,7 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::SplitToSequence => todo!(),
         OpType::Squeeze => match inputs {
             &[data, axes] => vec![squeeze::infer(data, axes)],
-            _ => panic!("Squeeze operator must have two inputs"),
+            _ => panic!("Squeeze operator must have 2 inputs"),
         },
         OpType::StringNormalizer => todo!(),
         OpType::TfIdfVectorizer => todo!(),
@@ -213,7 +219,7 @@ pub(crate) fn infer(op_type: OpType, inputs: &[&Tensor]) -> Vec<Tensor> {
         OpType::Unique => todo!(),
         OpType::Unsqueeze => match inputs {
             &[data, axes] => vec![unsqueeze::infer(data, axes)],
-            _ => panic!("Unsqueeze operator must have two inputs"),
+            _ => panic!("Unsqueeze operator must have 2 inputs"),
         },
         OpType::Upsample => todo!(),
         OpType::Where => todo!(),
