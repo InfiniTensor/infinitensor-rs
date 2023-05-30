@@ -1,4 +1,5 @@
 ﻿pub mod dense;
+pub mod dense1;
 pub mod linked;
 
 use crate::Tensor;
