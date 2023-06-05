@@ -18,18 +18,18 @@ impl Default for Graph {
             operator_id: 2,
             operators: BTreeMap::from([
                 (
-                    0,
+                    Self::INPUT_ID,
                     Operator {
-                        op_id: 0,
+                        op_id: Self::INPUT_ID,
                         op_type: "Input".to_string(),
                         inputs: Vec::new(),
                         outputs: Vec::new(),
                     },
                 ),
                 (
-                    1,
+                    Self::OUTPUT_ID,
                     Operator {
-                        op_id: 1,
+                        op_id: Self::OUTPUT_ID,
                         op_type: "Output".to_string(),
                         inputs: Vec::new(),
                         outputs: Vec::new(),
@@ -41,13 +41,16 @@ impl Default for Graph {
 }
 
 impl Graph {
+    const INPUT_ID: usize = 0;
+    const OUTPUT_ID: usize = 1;
+
     #[inline]
     pub fn new() -> Self {
         Default::default()
     }
 
     pub fn push_input(&mut self, tensor: Tensor) -> OutletPos {
-        let inputs = &mut self.operators.get_mut(&0).unwrap().outputs;
+        let inputs = &mut self.operators.get_mut(&Self::INPUT_ID).unwrap().outputs;
         let slot = inputs.len();
         inputs.push(Outlet {
             targets: Vec::new(),
@@ -69,7 +72,11 @@ impl Graph {
     }
 
     pub fn set_output(&mut self, outlet: OutletPos) {
-        self.operators.get_mut(&1).unwrap().inputs.push(outlet);
+        self.operators
+            .get_mut(&Self::OUTPUT_ID)
+            .unwrap()
+            .inputs
+            .push(outlet);
     }
 
     pub fn push_op(&mut self, op_type: String, inputs: Vec<OutletPos>) -> OperatorPos {
@@ -152,12 +159,40 @@ impl Graph {
 
 impl Graph {
     pub fn dce(&mut self) {
-        let mut edge = self.operators[&1].inputs.clone();
-        let mut operators = self.operators.keys().copied().collect::<BTreeSet<_>>();
-        let mut connected = BTreeSet::from([1usize]);
-    }
+        let mut edge = self.operators[&Self::OUTPUT_ID].inputs.clone();
+        let mut connected = BTreeSet::from([Self::OUTPUT_ID]);
 
-    pub fn remove_operator(&mut self, operator: OperatorPos) {
-        todo!()
+        loop {
+            let edge_op = edge.iter().map(|x| x.op_id).collect::<BTreeSet<_>>();
+            if edge_op.is_empty() {
+                break;
+            }
+            connected.extend(&edge_op);
+            edge = edge_op
+                .into_iter()
+                .flat_map(|x| self.operators[&x].inputs.clone())
+                .collect();
+        }
+
+        if connected.len() < self.operators.len() {
+            if !connected.contains(&Self::INPUT_ID) {
+                panic!("No path from input to output")
+            }
+            for id in &connected {
+                for tensor in self.operators.get(&id).unwrap().inputs.clone() {
+                    if !connected.contains(&tensor.op_id) {
+                        continue;
+                    }
+                    self.operators
+                        .get_mut(&tensor.op_id)
+                        .unwrap()
+                        .outputs
+                        .get_mut(tensor.slot)
+                        .unwrap()
+                        .targets
+                        .retain(|x| x.op_id != *id);
+                }
+            }
+        }
     }
 }
